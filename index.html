@@ -83,8 +83,26 @@
   /* Bottone separato, non un tab: apre/chiude la sezione degli eventi passati */
   .past-row{
     display:flex;
-    justify-content:flex-end;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
     margin-bottom:20px;
+  }
+  .notif-btn{
+    background:none;
+    border:1px solid var(--line);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    font-weight:600;
+    padding:7px 14px;
+    border-radius:100px;
+    cursor:pointer;
+  }
+  .notif-btn.active{
+    background:var(--red);
+    border-color:var(--red);
+    color:#fff;
   }
   .past-btn{
     background:none;
@@ -221,6 +239,23 @@
     line-height:1.55;
     color:var(--ink);
   }
+  .remind-btn{
+    margin-top:12px;
+    background:var(--paper);
+    border:1px solid var(--line);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    font-weight:600;
+    padding:8px 14px;
+    border-radius:6px;
+    cursor:pointer;
+  }
+  .remind-btn.active{
+    background:var(--red);
+    border-color:var(--red);
+    color:#fff;
+  }
 
   .empty{
     padding:30px 18px;
@@ -337,6 +372,7 @@
     </nav>
 
     <div class="past-row">
+      <button class="notif-btn" id="notif-btn">🔔 Avvisami</button>
       <button class="past-btn" id="past-btn">Cosa mi sono perso</button>
     </div>
 
@@ -370,6 +406,10 @@
   const SUPABASE_URL = "https://ttnwhqpvwkihszxpbdbe.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_W4TDBUcZsTSKPe6fdt0HhQ_6t8KyjXO";
 
+  // Chiave pubblica per le notifiche push (VAPID). Non è un segreto:
+  // è fatta apposta per stare nel codice del sito.
+  const VAPID_PUBLIC_KEY = "BBgvdvS4RK60mNFi0zBvwxfTSAVUOX9tm-4rSxHzBXuMrrnSRYhGbQFwS3Po4KJeVfyco2gO_Lp5opW95S2N7sQ";
+
   // Eventi di riserva, usati SOLO se il fetch a Supabase fallisce
   // (es. mentre stai ancora configurando il database).
   const fallbackEvents = [
@@ -394,6 +434,7 @@
       if (!res.ok) throw new Error("Risposta non valida da Supabase");
       const data = await res.json();
       return data.map(e => ({
+        id: e.id,
         title: e.title,
         place: e.place,
         date: e.event_date,
@@ -468,26 +509,38 @@
       card.className = 'card' + (highlight ? ' next' : '') + (isPastTab ? ' past' : '');
 
       const hasDetails = !!(e.image_url || e.description);
+      const canRemind = !isPastTab;
+      const expandable = hasDetails || canRemind;
+      const hintText = hasDetails ? 'Clicca per maggiori info' : 'Clicca per il promemoria';
 
       card.innerHTML = `
         <div class="card-meta">${highlight ? 'Il prossimo · ' : ''}${formatDate(e.dateObj)}</div>
         <div class="card-title-row">
           <div class="card-title">${e.title}</div>
-          ${hasDetails ? `<svg class="card-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>` : ''}
+          ${expandable ? `<svg class="card-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>` : ''}
         </div>
         <div class="card-place">📍 ${e.place}</div>
-        ${hasDetails ? `<div class="card-hint">Clicca per maggiori info</div>` : ''}
-        ${hasDetails ? `
+        ${expandable ? `<div class="card-hint">${hintText}</div>` : ''}
+        ${expandable ? `
         <div class="card-details">
           <div class="card-details-inner">
             ${e.image_url ? `<img class="card-image" src="${e.image_url}" alt="Locandina evento" loading="lazy" onerror="this.remove()">` : ''}
-            <div class="card-description">${e.description || 'Nessuna descrizione disponibile.'}</div>
+            ${hasDetails ? `<div class="card-description">${e.description || 'Nessuna descrizione disponibile.'}</div>` : ''}
+            ${canRemind ? `<button class="remind-btn${localStorage.getItem('ue_reminded_' + e.id) ? ' active' : ''}" data-event-id="${e.id}">${localStorage.getItem('ue_reminded_' + e.id) ? '🔔 Promemoria attivo' : '🔔 Ricordamelo'}</button>` : ''}
           </div>
         </div>` : ''}
       `;
 
-      if (hasDetails) {
+      if (expandable) {
         card.addEventListener('click', () => card.classList.toggle('expanded'));
+      }
+
+      const remindBtn = card.querySelector('.remind-btn');
+      if (remindBtn) {
+        remindBtn.addEventListener('click', (evt) => {
+          evt.stopPropagation();
+          remindMe(e.id, remindBtn);
+        });
       }
 
       container.appendChild(card);
@@ -605,6 +658,126 @@
       dismiss();
     });
   })();
+
+  // ==================================================================
+  // NOTIFICHE PUSH
+  // ==================================================================
+
+  // Converte la chiave VAPID (testo) nel formato che il browser richiede
+  function urlBase64ToUint8Array(base64String) {
+    const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+    const rawData = atob(base64);
+    return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+  }
+
+  function pushSupported() {
+    return 'serviceWorker' in navigator && 'PushManager' in window;
+  }
+
+  // Assicura che questo dispositivo abbia una sottoscrizione attiva.
+  // Se ce l'ha già (salvata in localStorage), la riusa senza richiedere
+  // di nuovo il permesso. Ritorna l'id della riga in push_subscriptions.
+  async function ensureSubscribed() {
+    if (!pushSupported()) {
+      alert('Le notifiche non sono supportate su questo browser/dispositivo (su iPhone serve prima installare il sito sulla schermata Home).');
+      return null;
+    }
+
+    const stored = localStorage.getItem('ue_sub_id');
+    if (stored) return stored;
+
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') return null;
+
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+      });
+    }
+    const subJson = sub.toJSON();
+
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/push_subscriptions?on_conflict=endpoint`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'resolution=merge-duplicates,return=representation',
+      },
+      body: JSON.stringify({
+        endpoint: subJson.endpoint,
+        p256dh: subJson.keys.p256dh,
+        auth: subJson.keys.auth,
+      }),
+    });
+    if (!res.ok) {
+      console.error('Errore salvataggio sottoscrizione', await res.text());
+      return null;
+    }
+    const rows = await res.json();
+    const id = rows[0]?.id;
+    if (id) localStorage.setItem('ue_sub_id', String(id));
+    return id;
+  }
+
+  // Bottone generale in alto: "avvisami dei nuovi eventi"
+  (function setupNotifButton() {
+    const btn = document.getElementById('notif-btn');
+    if (localStorage.getItem('ue_notify_new') === '1') {
+      btn.textContent = '🔔 Ti avviso!';
+      btn.classList.add('active');
+    }
+    btn.addEventListener('click', async () => {
+      if (localStorage.getItem('ue_notify_new') === '1') return;
+      const id = await ensureSubscribed();
+      if (!id) return;
+      await fetch(`${SUPABASE_URL}/rest/v1/push_subscriptions?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ notify_new_events: true }),
+      });
+      localStorage.setItem('ue_notify_new', '1');
+      btn.textContent = '🔔 Ti avviso!';
+      btn.classList.add('active');
+    });
+  })();
+
+  // Bottone dentro ogni evento: "ricordamelo il giorno stesso"
+  async function remindMe(eventId, btnEl) {
+    const already = localStorage.getItem('ue_reminded_' + eventId);
+    if (already) {
+      btnEl.textContent = '🔔 Promemoria attivo';
+      btnEl.classList.add('active');
+      return;
+    }
+    btnEl.textContent = 'Attivo...';
+    const id = await ensureSubscribed();
+    if (!id) {
+      btnEl.textContent = '🔔 Ricordamelo';
+      return;
+    }
+    await fetch(`${SUPABASE_URL}/rest/v1/event_reminders`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'resolution=ignore-duplicates',
+      },
+      body: JSON.stringify({ event_id: eventId, subscription_id: id }),
+    });
+    localStorage.setItem('ue_reminded_' + eventId, '1');
+    btnEl.textContent = '🔔 Promemoria attivo';
+    btnEl.classList.add('active');
+  }
 </script>
 </body>
 </html>
