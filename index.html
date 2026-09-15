@@ -308,6 +308,32 @@
     padding-top:16px;
   }
 
+  .toast{
+    position:fixed;
+    left:16px;
+    right:16px;
+    top:16px;
+    max-width:528px;
+    margin:0 auto;
+    background:var(--ink);
+    color:var(--paper);
+    padding:13px 16px;
+    border-radius:8px;
+    font-size:13.5px;
+    line-height:1.45;
+    text-align:center;
+    box-shadow:0 8px 24px rgba(0,0,0,0.25);
+    opacity:0;
+    pointer-events:none;
+    transform:translateY(-8px);
+    transition:opacity 0.25s ease, transform 0.25s ease;
+    z-index:200;
+  }
+  .toast.visible{
+    opacity:1;
+    transform:translateY(0);
+  }
+
   .install-banner{
     position:fixed;
     left:16px;
@@ -387,6 +413,8 @@
       Uni Events è un progetto studentesco indipendente, non affiliato ufficialmente all'Ateneo. Le fonti degli eventi sono sempre linkate.
     </footer>
   </div>
+
+  <div class="toast" id="toast"></div>
 
   <div class="install-banner" id="install-banner">
     <div class="install-banner-text" id="install-banner-text">
@@ -671,6 +699,14 @@
     return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
   }
 
+  function showToast(message, duration = 4000) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.classList.add('visible');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => toast.classList.remove('visible'), duration);
+  }
+
   function pushSupported() {
     return 'serviceWorker' in navigator && 'PushManager' in window;
   }
@@ -750,7 +786,32 @@
       btn.classList.add('active');
     }
     btn.addEventListener('click', async () => {
-      if (localStorage.getItem('ue_notify_new') === '1') return;
+      // Se è già attivo, un secondo click lo disattiva
+      if (localStorage.getItem('ue_notify_new') === '1') {
+        const subId = localStorage.getItem('ue_sub_id');
+        const originalText = btn.textContent;
+        btn.textContent = 'Un attimo...';
+        try {
+          if (subId) {
+            await fetch(`${SUPABASE_URL}/rest/v1/push_subscriptions?id=eq.${subId}`, {
+              method: 'PATCH',
+              headers: {
+                apikey: SUPABASE_ANON_KEY,
+                Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ notify_new_events: false }),
+            });
+          }
+        } catch (err) {
+          console.warn('Errore disattivazione (procedo comunque):', err);
+        }
+        localStorage.removeItem('ue_notify_new');
+        btn.textContent = '🔔 Avvisami!';
+        btn.classList.remove('active');
+        return;
+      }
+
       const originalText = btn.textContent;
       btn.textContent = 'Un attimo...';
       const id = await ensureSubscribed();
@@ -781,6 +842,7 @@
       localStorage.setItem('ue_notify_new', '1');
       btn.textContent = '🔔 Ti avviso!';
       btn.classList.add('active');
+      showToast('🔔 Attivato! Ti avviseremo ogni volta che viene aggiunto un nuovo evento.');
     });
   })();
 
@@ -811,6 +873,7 @@
     localStorage.setItem('ue_reminded_' + eventId, '1');
     btnEl.textContent = '🔔 Promemoria attivo';
     btnEl.classList.add('active');
+    showToast('🔔 Fatto! Ti avviseremo la mattina di questo evento, così non te lo perdi.');
   }
 </script>
 </body>
