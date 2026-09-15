@@ -203,13 +203,17 @@
     color:var(--muted);
   }
   .card-hint{
-    margin-top:10px;
     font-size:13px;
     color:var(--red);
     font-weight:600;
   }
-  .card.expanded .card-hint{
-    display:none;
+
+  .card-action-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-top:10px;
   }
 
   /* Pannello dettagli: animato con la tecnica "grid-template-rows"
@@ -240,7 +244,7 @@
     color:var(--ink);
   }
   .remind-btn{
-    margin-top:12px;
+    flex-shrink:0;
     background:var(--paper);
     border:1px solid var(--line);
     color:var(--ink);
@@ -538,28 +542,30 @@
 
       const hasDetails = !!(e.image_url || e.description);
       const canRemind = !isPastTab;
-      const expandable = hasDetails || canRemind;
-      const hintText = hasDetails ? 'Clicca per maggiori info' : 'Clicca per il promemoria';
+      const isReminded = !!localStorage.getItem('ue_reminded_' + e.id);
 
       card.innerHTML = `
         <div class="card-meta">${highlight ? 'Il prossimo · ' : ''}${formatDate(e.dateObj)}</div>
         <div class="card-title-row">
           <div class="card-title">${e.title}</div>
-          ${expandable ? `<svg class="card-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>` : ''}
+          ${hasDetails ? `<svg class="card-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>` : ''}
         </div>
         <div class="card-place">📍 ${e.place}</div>
-        ${expandable ? `<div class="card-hint">${hintText}</div>` : ''}
-        ${expandable ? `
+        ${(hasDetails || canRemind) ? `
+        <div class="card-action-row">
+          ${hasDetails ? `<div class="card-hint">Clicca per maggiori info</div>` : `<div></div>`}
+          ${canRemind ? `<button class="remind-btn${isReminded ? ' active' : ''}" data-event-id="${e.id}">${isReminded ? '🔔 Promemoria attivo' : '🔔 Ricordamelo'}</button>` : ''}
+        </div>` : ''}
+        ${hasDetails ? `
         <div class="card-details">
           <div class="card-details-inner">
             ${e.image_url ? `<img class="card-image" src="${e.image_url}" alt="Locandina evento" loading="lazy" onerror="this.remove()">` : ''}
-            ${hasDetails ? `<div class="card-description">${e.description || 'Nessuna descrizione disponibile.'}</div>` : ''}
-            ${canRemind ? `<button class="remind-btn${localStorage.getItem('ue_reminded_' + e.id) ? ' active' : ''}" data-event-id="${e.id}">${localStorage.getItem('ue_reminded_' + e.id) ? '🔔 Promemoria attivo' : '🔔 Ricordamelo'}</button>` : ''}
+            <div class="card-description">${e.description || 'Nessuna descrizione disponibile.'}</div>
           </div>
         </div>` : ''}
       `;
 
-      if (expandable) {
+      if (hasDetails) {
         card.addEventListener('click', () => card.classList.toggle('expanded'));
       }
 
@@ -849,11 +855,35 @@
   // Bottone dentro ogni evento: "ricordamelo il giorno stesso"
   async function remindMe(eventId, btnEl) {
     const already = localStorage.getItem('ue_reminded_' + eventId);
+
+    // Secondo click: rimuove il promemoria
     if (already) {
-      btnEl.textContent = '🔔 Promemoria attivo';
-      btnEl.classList.add('active');
+      const subId = localStorage.getItem('ue_sub_id');
+      btnEl.textContent = 'Un attimo...';
+      try {
+        if (subId) {
+          await fetch(
+            `${SUPABASE_URL}/rest/v1/event_reminders?event_id=eq.${eventId}&subscription_id=eq.${subId}`,
+            {
+              method: 'DELETE',
+              headers: {
+                apikey: SUPABASE_ANON_KEY,
+                Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+              },
+            }
+          );
+        }
+      } catch (err) {
+        console.warn('Errore rimozione promemoria (procedo comunque):', err);
+      }
+      localStorage.removeItem('ue_reminded_' + eventId);
+      btnEl.textContent = '🔔 Ricordamelo';
+      btnEl.classList.remove('active');
+      showToast('Promemoria rimosso.');
       return;
     }
+
+    // Primo click: attiva il promemoria
     btnEl.textContent = 'Attivo...';
     const id = await ensureSubscribed();
     if (!id) {
