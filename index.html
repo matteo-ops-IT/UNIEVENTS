@@ -726,9 +726,6 @@
       return null;
     }
 
-    const stored = localStorage.getItem('ue_sub_id');
-    if (stored) return stored;
-
     try {
       const permission = await Notification.requestPermission();
       if (permission === 'denied') {
@@ -739,6 +736,9 @@
         return null; // l'utente ha semplicemente chiuso la richiesta senza rispondere
       }
 
+      // Non ci fidiamo ciecamente dell'id salvato in precedenza: verifichiamo
+      // sempre che il browser abbia ancora una sottoscrizione push valida
+      // (potrebbe essere scaduta, ad es. dopo troppi test o un cambio di dispositivo).
       const reg = await navigator.serviceWorker.ready;
       let sub = await reg.pushManager.getSubscription();
       if (!sub) {
@@ -749,6 +749,9 @@
       }
       const subJson = sub.toJSON();
 
+      // "Upsert": se questo endpoint esiste già nel database lo riusa,
+      // altrimenti ne crea uno nuovo. Così è sempre allineato con quello
+      // che il browser ha DAVVERO in questo momento.
       const res = await fetch(`${SUPABASE_URL}/rest/v1/push_subscriptions?on_conflict=endpoint`, {
         method: 'POST',
         headers: {
