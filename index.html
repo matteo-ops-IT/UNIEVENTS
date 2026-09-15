@@ -372,7 +372,7 @@
     </nav>
 
     <div class="past-row">
-      <button class="notif-btn" id="notif-btn">🔔 Avvisami</button>
+      <button class="notif-btn" id="notif-btn">🔔 Avvisami!</button>
       <button class="past-btn" id="past-btn">Cosa mi sono perso</button>
     </div>
 
@@ -687,41 +687,59 @@
     const stored = localStorage.getItem('ue_sub_id');
     if (stored) return stored;
 
-    const permission = await Notification.requestPermission();
-    if (permission !== 'granted') return null;
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === 'denied') {
+        alert('Hai bloccato le notifiche per questo sito in passato. Per attivarle, vai nelle impostazioni del browser (icona del lucchetto accanto all\'indirizzo) e consenti le notifiche, poi riprova.');
+        return null;
+      }
+      if (permission !== 'granted') {
+        return null; // l'utente ha semplicemente chiuso la richiesta senza rispondere
+      }
 
-    const reg = await navigator.serviceWorker.ready;
-    let sub = await reg.pushManager.getSubscription();
-    if (!sub) {
-      sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+      const reg = await navigator.serviceWorker.ready;
+      let sub = await reg.pushManager.getSubscription();
+      if (!sub) {
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        });
+      }
+      const subJson = sub.toJSON();
+
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/push_subscriptions?on_conflict=endpoint`, {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+          Prefer: 'resolution=merge-duplicates,return=representation',
+        },
+        body: JSON.stringify({
+          endpoint: subJson.endpoint,
+          p256dh: subJson.keys.p256dh,
+          auth: subJson.keys.auth,
+        }),
       });
-    }
-    const subJson = sub.toJSON();
-
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/push_subscriptions?on_conflict=endpoint`, {
-      method: 'POST',
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-        'Content-Type': 'application/json',
-        Prefer: 'resolution=merge-duplicates,return=representation',
-      },
-      body: JSON.stringify({
-        endpoint: subJson.endpoint,
-        p256dh: subJson.keys.p256dh,
-        auth: subJson.keys.auth,
-      }),
-    });
-    if (!res.ok) {
-      console.error('Errore salvataggio sottoscrizione', await res.text());
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error('Errore salvataggio sottoscrizione', errText);
+        alert('Qualcosa è andato storto nel salvare la tua iscrizione. Dettaglio tecnico: ' + errText);
+        return null;
+      }
+      const rows = await res.json();
+      const id = rows[0]?.id;
+      if (!id) {
+        alert('Iscrizione salvata ma non ho ricevuto un id di conferma. Riprova tra poco.');
+        return null;
+      }
+      localStorage.setItem('ue_sub_id', String(id));
+      return id;
+    } catch (err) {
+      console.error('Errore attivazione notifiche', err);
+      alert('Errore durante l\'attivazione delle notifiche: ' + err.message);
       return null;
     }
-    const rows = await res.json();
-    const id = rows[0]?.id;
-    if (id) localStorage.setItem('ue_sub_id', String(id));
-    return id;
   }
 
   // Bottone generale in alto: "avvisami dei nuovi eventi"
@@ -733,17 +751,33 @@
     }
     btn.addEventListener('click', async () => {
       if (localStorage.getItem('ue_notify_new') === '1') return;
+      const originalText = btn.textContent;
+      btn.textContent = 'Un attimo...';
       const id = await ensureSubscribed();
-      if (!id) return;
-      await fetch(`${SUPABASE_URL}/rest/v1/push_subscriptions?id=eq.${id}`, {
-        method: 'PATCH',
-        headers: {
-          apikey: SUPABASE_ANON_KEY,
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ notify_new_events: true }),
-      });
+      if (!id) {
+        btn.textContent = originalText;
+        return;
+      }
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/push_subscriptions?id=eq.${id}`, {
+          method: 'PATCH',
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ notify_new_events: true }),
+        });
+        if (!res.ok) {
+          alert('Iscrizione avvenuta ma non sono riuscito ad attivare gli avvisi sui nuovi eventi. Dettaglio: ' + (await res.text()));
+          btn.textContent = originalText;
+          return;
+        }
+      } catch (err) {
+        alert('Errore di rete durante l\'attivazione: ' + err.message);
+        btn.textContent = originalText;
+        return;
+      }
       localStorage.setItem('ue_notify_new', '1');
       btn.textContent = '🔔 Ti avviso!';
       btn.classList.add('active');
