@@ -893,16 +893,30 @@
       btnEl.textContent = '🔔 Ricordamelo';
       return;
     }
-    await fetch(`${SUPABASE_URL}/rest/v1/event_reminders`, {
-      method: 'POST',
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-        'Content-Type': 'application/json',
-        Prefer: 'resolution=ignore-duplicates',
-      },
-      body: JSON.stringify({ event_id: eventId, subscription_id: id }),
-    });
+    let remindRes;
+    try {
+      remindRes = await fetch(`${SUPABASE_URL}/rest/v1/event_reminders`, {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+          Prefer: 'resolution=ignore-duplicates',
+        },
+        body: JSON.stringify({ event_id: eventId, subscription_id: id }),
+      });
+    } catch (err) {
+      alert('Errore di rete durante il salvataggio del promemoria: ' + err.message);
+      btnEl.textContent = '🔔 Ricordamelo';
+      return;
+    }
+    if (!remindRes.ok) {
+      const errText = await remindRes.text();
+      console.error('Errore salvataggio promemoria', errText);
+      alert('Non sono riuscito a salvare il promemoria. Dettaglio tecnico: ' + errText);
+      btnEl.textContent = '🔔 Ricordamelo';
+      return;
+    }
     localStorage.setItem('ue_reminded_' + eventId, '1');
     btnEl.textContent = '🔔 Promemoria attivo';
     btnEl.classList.add('active');
