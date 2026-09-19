@@ -14,7 +14,400 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<style>
+  :root{
+    --paper:#F7F5F1;
+    --ink:#1B1B1D;
+    --red:#D6272B;
+    --line:#E3DFD6;
+    --muted:#78726A;
+    --tape:#EFE6C8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{
+    max-width:560px;
+    margin:0 auto;
+    padding:28px 20px 60px;
+  }
+  header{
+    margin-bottom:22px;
+  }
+  .logo{
+    font-family:'Archivo Black',sans-serif;
+    font-size:30px;
+    line-height:1;
+    letter-spacing:-0.01em;
+  }
+  .logo img{
+    display:block;
+    height:34px;
+    width:auto;
+  }
+  .logo span{color:var(--red);}
+  .tagline{
+    margin-top:8px;
+    color:var(--muted);
+    font-size:15px;
+  }
+
+  .tabs{
+    display:flex;
+    gap:22px;
+    border-bottom:1px solid var(--line);
+    margin-bottom:14px;
+  }
+  .tab{
+    background:none;
+    border:none;
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+    font-weight:600;
+    color:var(--muted);
+    padding:0 0 12px;
+    cursor:pointer;
+    border-bottom:2px solid transparent;
+    margin-bottom:-1px;
+  }
+  .tab.active{
+    color:var(--ink);
+    border-bottom-color:var(--red);
+  }
+
+  /* Bottone separato, non un tab: apre/chiude la sezione degli eventi passati */
+  .past-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    margin-bottom:20px;
+  }
+  .notif-btn{
+    background:none;
+    border:1px solid var(--line);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    font-weight:600;
+    padding:7px 14px;
+    border-radius:100px;
+    cursor:pointer;
+  }
+  .notif-btn.active{
+    background:var(--red);
+    border-color:var(--red);
+    color:#fff;
+  }
+  .past-btn{
+    background:none;
+    border:1px solid var(--line);
+    color:var(--muted);
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    font-weight:600;
+    padding:7px 14px;
+    border-radius:100px;
+    cursor:pointer;
+  }
+  .past-btn:hover{
+    border-color:var(--muted);
+    color:var(--ink);
+  }
+  .past-btn.active-past{
+    background:var(--ink);
+    border-color:var(--ink);
+    color:var(--paper);
+  }
+
+  .list{
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+  }
+
+  .card{
+    position:relative;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:18px 18px 16px;
+    box-shadow:0 1px 0 rgba(0,0,0,0.03);
+    cursor:pointer;
+  }
+  .card::before{
+    content:"";
+    position:absolute;
+    top:-8px;
+    left:22px;
+    width:34px;
+    height:16px;
+    background:var(--tape);
+    opacity:0.9;
+    transform:rotate(-3deg);
+  }
+  .card.next{
+    border-color:var(--red);
+  }
+  .card.next::before{
+    background:var(--red);
+    opacity:0.85;
+  }
+  .card.past{
+    opacity:0.55;
+  }
+  .card.past::before{
+    background:var(--line);
+  }
+  .card.live{
+    border-color:var(--red);
+    animation: pulse-border 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse-border{
+    0%,100%{ box-shadow:0 0 0 0 rgba(214,39,43,0.35); }
+    50%{ box-shadow:0 0 0 6px rgba(214,39,43,0); }
+  }
+  .card.elapsed{
+    opacity:0.55;
+  }
+  .card-live-banner{
+    background:var(--red);
+    color:#fff;
+    font-size:13px;
+    font-weight:600;
+    padding:6px 10px;
+    border-radius:4px;
+    margin-bottom:8px;
+    display:inline-block;
+  }
+  .card:nth-child(3n+1){ transform:rotate(-0.6deg); }
+  .card:nth-child(3n+2){ transform:rotate(0.5deg); }
+  .card:nth-child(3n)  { transform:rotate(-0.2deg); }
+
+  .card-meta{
+    font-size:13px;
+    color:var(--muted);
+    margin-bottom:6px;
+  }
+  .card.next .card-meta{
+    color:var(--red);
+    font-weight:600;
+  }
+  .card-title-row{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .card-title{
+    font-size:18px;
+    font-weight:700;
+    line-height:1.3;
+    margin-bottom:8px;
+  }
+  .card-chevron{
+    flex-shrink:0;
+    margin-top:2px;
+    color:var(--muted);
+    transition:transform 0.3s ease;
+  }
+  .card.expanded .card-chevron{
+    transform:rotate(180deg);
+  }
+  .card-place{
+    font-size:14px;
+    color:var(--muted);
+  }
+  .card-hint{
+    font-size:13px;
+    color:var(--red);
+    font-weight:600;
+  }
+
+  .card-action-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-top:10px;
+  }
+
+  /* Pannello dettagli: animato con la tecnica "grid-template-rows"
+     per un'apertura/chiusura fluida senza dover calcolare altezze in JS */
+  .card-details{
+    display:grid;
+    grid-template-rows:0fr;
+    transition:grid-template-rows 0.35s ease;
+  }
+  .card.expanded .card-details{
+    grid-template-rows:1fr;
+    margin-top:12px;
+  }
+  .card-details-inner{
+    overflow:hidden;
+  }
+  .card-image{
+    width:100%;
+    max-height:220px;
+    object-fit:cover;
+    border-radius:2px;
+    margin-bottom:12px;
+    display:block;
+  }
+  .card-description{
+    font-size:14.5px;
+    line-height:1.55;
+    color:var(--ink);
+  }
+  .remind-btn{
+    flex-shrink:0;
+    background:var(--paper);
+    border:1px solid var(--line);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    font-weight:600;
+    padding:8px 14px;
+    border-radius:6px;
+    cursor:pointer;
+  }
+  .remind-btn.active{
+    background:var(--red);
+    border-color:var(--red);
+    color:#fff;
+  }
+
+  .empty{
+    padding:30px 18px;
+    text-align:center;
+    border:1px dashed var(--line);
+    border-radius:3px;
+    color:var(--muted);
+    font-size:15px;
+    line-height:1.5;
+  }
+  .empty button{
+    margin-top:12px;
+    background:none;
+    border:none;
+    color:var(--red);
+    font-weight:600;
+    font-size:15px;
+    cursor:pointer;
+    text-decoration:underline;
+  }
+
+  .cta{
+    margin-top:32px;
+    padding:20px;
+    background:var(--ink);
+    color:var(--paper);
+    border-radius:3px;
+  }
+  .cta p{
+    margin:0 0 12px;
+    font-size:15px;
+  }
+  .cta a{
+    display:inline-block;
+    background:var(--red);
+    color:#fff;
+    text-decoration:none;
+    font-weight:600;
+    font-size:14px;
+    padding:10px 16px;
+    border-radius:3px;
+  }
+
+  footer{
+    margin-top:30px;
+    font-size:12.5px;
+    color:var(--muted);
+    line-height:1.5;
+    border-top:1px solid var(--line);
+    padding-top:16px;
+  }
+
+  .toast{
+    position:fixed;
+    left:16px;
+    right:16px;
+    top:16px;
+    max-width:528px;
+    margin:0 auto;
+    background:var(--ink);
+    color:var(--paper);
+    padding:13px 16px;
+    border-radius:8px;
+    font-size:13.5px;
+    line-height:1.45;
+    text-align:center;
+    box-shadow:0 8px 24px rgba(0,0,0,0.25);
+    opacity:0;
+    pointer-events:none;
+    transform:translateY(-8px);
+    transition:opacity 0.25s ease, transform 0.25s ease;
+    z-index:200;
+  }
+  .toast.visible{
+    opacity:1;
+    transform:translateY(0);
+  }
+
+  .install-banner{
+    position:fixed;
+    left:16px;
+    right:16px;
+    bottom:16px;
+    max-width:528px;
+    margin:0 auto;
+    background:var(--ink);
+    color:var(--paper);
+    padding:14px 16px;
+    border-radius:8px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.25);
+    display:none;
+    align-items:center;
+    gap:12px;
+    z-index:100;
+  }
+  .install-banner.visible{
+    display:flex;
+  }
+  .install-banner-text{
+    flex:1;
+    font-size:13.5px;
+    line-height:1.45;
+  }
+  .install-banner-text strong{
+    display:block;
+    font-size:14.5px;
+    margin-bottom:2px;
+  }
+  .install-banner button{
+    background:var(--red);
+    color:#fff;
+    border:none;
+    font-weight:600;
+    font-size:13px;
+    padding:9px 14px;
+    border-radius:6px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .install-banner-close{
+    background:none !important;
+    color:var(--paper) !important;
+    font-size:18px !important;
+    padding:0 4px !important;
+    line-height:1;
+  }
+</style>
 </head>
 <body>
   <div class="wrap">
@@ -98,6 +491,7 @@
         title: e.title,
         place: e.place,
         date: e.event_date,
+        end: e.event_end || null,
         link: e.link,
         image_url: e.image_url,
         description: e.description,
@@ -132,6 +526,22 @@
     return `${s} · ${t}`;
   }
 
+  // Orario oltre il quale l'evento è considerato concluso:
+  // la sua fine, se specificata, altrimenti il suo inizio.
+  function eventCutoff(e) {
+    return e.endDateObj || e.dateObj;
+  }
+  function isLive(e, now) {
+    return !!e.endDateObj && now >= e.dateObj && now <= e.endDateObj;
+  }
+  function isElapsed(e, now) {
+    return now > eventCutoff(e);
+  }
+  // Il "prossimo" in assoluto: il primo evento non ancora iniziato, in ordine cronologico.
+  function getNextEvent(now) {
+    return events.find(e => e.dateObj > now) || null;
+  }
+
   const emptyMessages = {
     oggi: { text: "Nessun evento in programma per oggi.", jump: "settimana", cta: "Guarda questa settimana" },
     settimana: { text: "Nessun evento in programma questa settimana.", jump: "mese", cta: "Guarda questo mese" },
@@ -162,18 +572,28 @@
     }
 
     const isPastTab = tab === 'passati';
+    const now = new Date();
+    const nextEvent = isPastTab ? null : getNextEvent(now);
 
-    list.forEach((e, i) => {
+    list.forEach((e) => {
       const card = document.createElement('div');
-      const highlight = !isPastTab && i === 0;
-      card.className = 'card' + (highlight ? ' next' : '') + (isPastTab ? ' past' : '');
+      const live = !isPastTab && isLive(e, now);
+      const elapsed = !isPastTab && isElapsed(e, now);
+      const isNext = !isPastTab && nextEvent && e.id === nextEvent.id;
+
+      card.className = 'card'
+        + (isNext ? ' next' : '')
+        + (live ? ' live' : '')
+        + (elapsed && !isNext ? ' elapsed' : '')
+        + (isPastTab ? ' past' : '');
 
       const hasDetails = !!(e.image_url || e.description);
       const canRemind = !isPastTab;
       const isReminded = !!localStorage.getItem('ue_reminded_' + e.id);
 
       card.innerHTML = `
-        <div class="card-meta">${highlight ? 'Il prossimo · ' : ''}${formatDate(e.dateObj)}</div>
+        ${live ? `<div class="card-live-banner">🔴 Evento live in questo momento: sei ancora in tempo!</div>` : ''}
+        <div class="card-meta">${isNext ? 'Il prossimo · ' : ''}${formatDate(e.dateObj)}</div>
         <div class="card-title-row">
           <div class="card-title">${e.title}</div>
           ${hasDetails ? `<svg class="card-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>` : ''}
@@ -248,7 +668,7 @@
 
     const rawEvents = await fetchEvents();
     events = rawEvents
-      .map(e => ({ ...e, dateObj: new Date(e.date) }))
+      .map(e => ({ ...e, dateObj: new Date(e.date), endDateObj: e.end ? new Date(e.end) : null }))
       .sort((a, b) => a.dateObj - b.dateObj);
 
     render('oggi');
