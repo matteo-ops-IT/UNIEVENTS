@@ -164,6 +164,27 @@
   .card.past::before{
     background:var(--line);
   }
+  .card.live{
+    border-color:var(--red);
+    animation: pulse-border 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse-border{
+    0%,100%{ box-shadow:0 0 0 0 rgba(214,39,43,0.35); }
+    50%{ box-shadow:0 0 0 6px rgba(214,39,43,0); }
+  }
+  .card.elapsed{
+    opacity:0.55;
+  }
+  .card-live-banner{
+    background:var(--red);
+    color:#fff;
+    font-size:13px;
+    font-weight:600;
+    padding:6px 10px;
+    border-radius:4px;
+    margin-bottom:8px;
+    display:inline-block;
+  }
   .card:nth-child(3n+1){ transform:rotate(-0.6deg); }
   .card:nth-child(3n+2){ transform:rotate(0.5deg); }
   .card:nth-child(3n)  { transform:rotate(-0.2deg); }
@@ -470,6 +491,7 @@
         title: e.title,
         place: e.place,
         date: e.event_date,
+        end: e.event_end || null,
         link: e.link,
         image_url: e.image_url,
         description: e.description,
@@ -504,6 +526,22 @@
     return `${s} · ${t}`;
   }
 
+  // Orario oltre il quale l'evento è considerato concluso:
+  // la sua fine, se specificata, altrimenti il suo inizio.
+  function eventCutoff(e) {
+    return e.endDateObj || e.dateObj;
+  }
+  function isLive(e, now) {
+    return !!e.endDateObj && now >= e.dateObj && now <= e.endDateObj;
+  }
+  function isElapsed(e, now) {
+    return now > eventCutoff(e);
+  }
+  // Il "prossimo" in assoluto: il primo evento non ancora iniziato, in ordine cronologico.
+  function getNextEvent(now) {
+    return events.find(e => e.dateObj > now) || null;
+  }
+
   const emptyMessages = {
     oggi: { text: "Nessun evento in programma per oggi.", jump: "settimana", cta: "Guarda questa settimana" },
     settimana: { text: "Nessun evento in programma questa settimana.", jump: "mese", cta: "Guarda questo mese" },
@@ -534,18 +572,28 @@
     }
 
     const isPastTab = tab === 'passati';
+    const now = new Date();
+    const nextEvent = isPastTab ? null : getNextEvent(now);
 
-    list.forEach((e, i) => {
+    list.forEach((e) => {
       const card = document.createElement('div');
-      const highlight = !isPastTab && i === 0;
-      card.className = 'card' + (highlight ? ' next' : '') + (isPastTab ? ' past' : '');
+      const live = !isPastTab && isLive(e, now);
+      const elapsed = !isPastTab && isElapsed(e, now);
+      const isNext = !isPastTab && nextEvent && e.id === nextEvent.id;
+
+      card.className = 'card'
+        + (isNext ? ' next' : '')
+        + (live ? ' live' : '')
+        + (elapsed && !isNext ? ' elapsed' : '')
+        + (isPastTab ? ' past' : '');
 
       const hasDetails = !!(e.image_url || e.description);
       const canRemind = !isPastTab;
       const isReminded = !!localStorage.getItem('ue_reminded_' + e.id);
 
       card.innerHTML = `
-        <div class="card-meta">${highlight ? 'Il prossimo · ' : ''}${formatDate(e.dateObj)}</div>
+        ${live ? `<div class="card-live-banner">🔴 Evento live in questo momento: sei ancora in tempo!</div>` : ''}
+        <div class="card-meta">${isNext ? 'Il prossimo · ' : ''}${formatDate(e.dateObj)}</div>
         <div class="card-title-row">
           <div class="card-title">${e.title}</div>
           ${hasDetails ? `<svg class="card-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>` : ''}
@@ -620,7 +668,7 @@
 
     const rawEvents = await fetchEvents();
     events = rawEvents
-      .map(e => ({ ...e, dateObj: new Date(e.date) }))
+      .map(e => ({ ...e, dateObj: new Date(e.date), endDateObj: e.end ? new Date(e.end) : null }))
       .sort((a, b) => a.dateObj - b.dateObj);
 
     render('oggi');
