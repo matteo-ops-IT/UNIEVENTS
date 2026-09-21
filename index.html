@@ -228,6 +228,14 @@
     color:var(--red);
     font-weight:600;
   }
+  .card-source{
+    margin-top:2px;
+  }
+  .card-source a{
+    font-size:13px;
+    color:var(--muted);
+    text-decoration:underline;
+  }
 
   .card-action-row{
     display:flex;
@@ -590,6 +598,7 @@
       const hasDetails = !!(e.image_url || e.description);
       const canRemind = !isPastTab;
       const isReminded = !!localStorage.getItem('ue_reminded_' + e.id);
+      const hasSource = !!(e.link && e.link !== '#');
 
       card.innerHTML = `
         ${live ? `<div class="card-live-banner">🔴 Evento live in questo momento: sei ancora in tempo!</div>` : ''}
@@ -599,6 +608,7 @@
           ${hasDetails ? `<svg class="card-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>` : ''}
         </div>
         <div class="card-place">📍 ${e.place}</div>
+        ${hasSource ? `<div class="card-source"><a href="${e.link}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">🔗 Vedi la fonte</a></div>` : ''}
         ${(hasDetails || canRemind) ? `
         <div class="card-action-row">
           ${hasDetails ? `<div class="card-hint">Clicca per maggiori info</div>` : `<div></div>`}
@@ -968,7 +978,7 @@
     localStorage.setItem('ue_reminded_' + eventId, '1');
     btnEl.textContent = '🔔 Promemoria attivo';
     btnEl.classList.add('active');
-    showToast('🔔 Fatto! Ti avviseremo per tempo, così non te lo perdi.');
+    showToast('🔔 Fatto! Ti avviseremo la mattina di questo evento, così non te lo perdi.');
   }
 </script>
 </body>
