@@ -545,10 +545,14 @@
     };
   }
 
-  function formatDate(d) {
-    const s = d.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' });
-    const t = d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-    return `${s} · ${t}`;
+  function formatDate(e) {
+    const s = e.dateObj.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' });
+    const startT = e.dateObj.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    if (e.endDateObj) {
+      const endT = e.endDateObj.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+      return `${s} · ${startT}–${endT}`;
+    }
+    return `${s} · ${startT}`;
   }
 
   // Orario oltre il quale l'evento è considerato concluso:
@@ -620,7 +624,7 @@
       card.innerHTML = `
         ${live ? `<div class="card-live-banner">🔴 Evento live in questo momento: sei ancora in tempo!</div>` : ''}
         <div class="card-top-row">
-          <div class="card-meta">${isNext ? 'Il prossimo · ' : ''}${formatDate(e.dateObj)}</div>
+          <div class="card-meta">${isNext ? 'Il prossimo · ' : ''}${formatDate(e)}</div>
           ${hasSource ? `<a class="source-pill" href="${e.link}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">🔗 Fonte</a>` : ''}
         </div>
         <div class="card-title-row">
@@ -747,7 +751,7 @@
       // iOS non ha un popup automatico: mostriamo istruzioni manuali,
       // solo se il browser è Safari (unico che supporta l'aggiunta alla Home).
       if (!isSafari) return;
-      textEl.innerHTML = `<strong>Installa Uni Events</strong>Tocca l'icona Condividi 􀈂 in basso, poi "Aggiungi a Home".`;
+      textEl.innerHTML = `<strong>Installa Uni Events</strong>Tocca l'icona Condividi <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M12 2v13"/><path d="M8 6l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg> in basso, poi "Aggiungi a Home".`;
       actionBtn.style.display = 'none';
       showBanner();
       return;
@@ -997,7 +1001,7 @@
     localStorage.setItem('ue_reminded_' + eventId, '1');
     btnEl.textContent = '🔔 Promemoria attivo';
     btnEl.classList.add('active');
-    showToast('🔔 Fatto! Ti avviseremo per tempo, così non te lo perdi.');
+    showToast('🔔 Fatto! Ti avviseremo la mattina di questo evento, così non te lo perdi.');
   }
 </script>
 </body>
