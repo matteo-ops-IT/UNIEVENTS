@@ -228,6 +228,31 @@
     color:var(--red);
     font-weight:600;
   }
+  .card-top-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .source-pill{
+    flex-shrink:0;
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    font-size:12px;
+    font-weight:600;
+    color:var(--muted);
+    text-decoration:none;
+    border:1px solid var(--line);
+    border-radius:100px;
+    padding:4px 11px;
+    white-space:nowrap;
+  }
+  .source-pill:hover{
+    border-color:var(--muted);
+    color:var(--ink);
+  }
 
   .card-action-row{
     display:flex;
@@ -590,10 +615,14 @@
       const hasDetails = !!(e.image_url || e.description);
       const canRemind = !isPastTab;
       const isReminded = !!localStorage.getItem('ue_reminded_' + e.id);
+      const hasSource = !!(e.link && e.link !== '#');
 
       card.innerHTML = `
         ${live ? `<div class="card-live-banner">🔴 Evento live in questo momento: sei ancora in tempo!</div>` : ''}
-        <div class="card-meta">${isNext ? 'Il prossimo · ' : ''}${formatDate(e.dateObj)}</div>
+        <div class="card-top-row">
+          <div class="card-meta">${isNext ? 'Il prossimo · ' : ''}${formatDate(e.dateObj)}</div>
+          ${hasSource ? `<a class="source-pill" href="${e.link}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">🔗 Fonte</a>` : ''}
+        </div>
         <div class="card-title-row">
           <div class="card-title">${e.title}</div>
           ${hasDetails ? `<svg class="card-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>` : ''}
@@ -968,7 +997,7 @@
     localStorage.setItem('ue_reminded_' + eventId, '1');
     btnEl.textContent = '🔔 Promemoria attivo';
     btnEl.classList.add('active');
-    showToast('🔔 Fatto! Ti avviseremo per tempo, così non te lo perdi.');
+    showToast('🔔 Fatto! Ti avviseremo la mattina di questo evento, così non te lo perdi.');
   }
 </script>
 </body>
