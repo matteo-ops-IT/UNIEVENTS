@@ -640,7 +640,7 @@
         ${hasDetails ? `
         <div class="card-details">
           <div class="card-details-inner">
-            ${e.image_url ? `<img class="card-image" src="${e.image_url}" alt="Locandina evento" loading="lazy" onerror="this.remove()">` : ''}
+            ${e.image_url ? `<img class="card-image" src="${e.image_url}" alt="Locandina evento" onerror="this.remove()">` : ''}
             <div class="card-description">${e.description || 'Nessuna descrizione disponibile.'}</div>
           </div>
         </div>` : ''}
