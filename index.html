@@ -425,42 +425,42 @@
 
   .install-banner{
     position:fixed;
-    left:16px;
-    right:16px;
-    bottom:16px;
-    max-width:528px;
-    margin:0 auto;
+    left:0;
+    right:0;
+    bottom:0;
+    max-width:none;
+    margin:0;
     background:var(--ink);
     color:var(--paper);
-    padding:14px 16px;
-    border-radius:8px;
-    box-shadow:0 8px 24px rgba(0,0,0,0.25);
+    padding:20px 20px calc(22px + env(safe-area-inset-bottom, 0px));
+    box-shadow:0 -10px 30px rgba(0,0,0,0.3);
     display:none;
     align-items:center;
-    gap:12px;
+    gap:14px;
     z-index:100;
+    border-top:3px solid var(--red);
   }
   .install-banner.visible{
     display:flex;
   }
   .install-banner-text{
     flex:1;
-    font-size:13.5px;
-    line-height:1.45;
+    font-size:15px;
+    line-height:1.5;
   }
   .install-banner-text strong{
     display:block;
-    font-size:14.5px;
-    margin-bottom:2px;
+    font-size:17px;
+    margin-bottom:3px;
   }
   .install-banner button{
     background:var(--red);
     color:#fff;
     border:none;
-    font-weight:600;
-    font-size:13px;
-    padding:9px 14px;
-    border-radius:6px;
+    font-weight:700;
+    font-size:15px;
+    padding:13px 18px;
+    border-radius:8px;
     cursor:pointer;
     white-space:nowrap;
   }
@@ -848,7 +848,6 @@
 
     const ua = window.navigator.userAgent;
     const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
-    const isSafari = isIOS && /Safari/.test(ua) && !/CriOS|FxiOS/.test(ua);
 
     function showBanner() {
       banner.classList.add('visible');
@@ -860,10 +859,11 @@
     closeBtn.addEventListener('click', dismiss);
 
     if (isIOS) {
-      // iOS non ha un popup automatico: mostriamo istruzioni manuali,
-      // solo se il browser è Safari (unico che supporta l'aggiunta alla Home).
-      if (!isSafari) return;
-      textEl.innerHTML = `<strong>Installa Uni Events</strong>Tocca l'icona Condividi <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M12 2v13"/><path d="M8 6l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg> in basso, poi "Aggiungi a Home".`;
+      // iOS non ha un popup automatico: mostriamo istruzioni manuali.
+      // Su iOS tutti i browser (Safari, Chrome, Firefox, Edge...) usano lo
+      // stesso motore di Apple e hanno lo stesso pulsante "Condividi",
+      // quindi le istruzioni valgono per tutti.
+      textEl.innerHTML = `<strong>Installa Uni Events</strong>Tocca l'icona Condividi <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M12 2v13"/><path d="M8 6l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg> (in Safari in basso, nei ⋯ in alto su Chrome e altri browser), poi "Aggiungi a Home".`;
       actionBtn.style.display = 'none';
       showBanner();
       return;
@@ -882,7 +882,9 @@
       deferredPrompt.prompt();
       await deferredPrompt.userChoice;
       deferredPrompt = null;
-      dismiss();
+      // Nascondiamo solo per ora, senza "ricordarlo per sempre":
+      // se in futuro l'app viene disinstallata, il banner potrà ricomparire.
+      banner.classList.remove('visible');
     });
   })();
 
