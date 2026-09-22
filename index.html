@@ -464,13 +464,6 @@
     cursor:pointer;
     white-space:nowrap;
   }
-  .install-banner-close{
-    background:none !important;
-    color:var(--paper) !important;
-    font-size:18px !important;
-    padding:0 4px !important;
-    line-height:1;
-  }
 </style>
 </head>
 <body>
@@ -511,7 +504,6 @@
       Aggiungilo alla schermata Home per aprirlo come un'app.
     </div>
     <button id="install-banner-action">Installa</button>
-    <button class="install-banner-close" id="install-banner-close" aria-label="Chiudi">✕</button>
   </div>
 
 <script>
@@ -836,10 +828,6 @@
     const banner = document.getElementById('install-banner');
     const textEl = document.getElementById('install-banner-text');
     const actionBtn = document.getElementById('install-banner-action');
-    const closeBtn = document.getElementById('install-banner-close');
-
-    const STORAGE_KEY = 'ue_install_dismissed_v2';
-    if (localStorage.getItem(STORAGE_KEY) === '1') return;
 
     const isStandalone =
       window.matchMedia('(display-mode: standalone)').matches ||
@@ -852,11 +840,6 @@
     function showBanner() {
       banner.classList.add('visible');
     }
-    function dismiss() {
-      banner.classList.remove('visible');
-      localStorage.setItem(STORAGE_KEY, '1');
-    }
-    closeBtn.addEventListener('click', dismiss);
 
     if (isIOS) {
       // iOS non ha un popup automatico: mostriamo istruzioni manuali.
