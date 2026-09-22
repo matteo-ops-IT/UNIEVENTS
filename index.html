@@ -175,6 +175,15 @@
   .card.elapsed{
     opacity:0.55;
   }
+  /* Evidenziazione temporanea della card raggiunta da un link condiviso */
+  .card.shared-highlight{
+    animation: pulse-shared 1.1s ease-in-out 2;
+  }
+  @keyframes pulse-shared{
+    0%{ box-shadow:0 0 0 0 rgba(214,39,43,0.45); border-color:var(--red); }
+    60%{ box-shadow:0 0 0 10px rgba(214,39,43,0); border-color:var(--red); }
+    100%{ box-shadow:0 0 0 0 rgba(214,39,43,0); }
+  }
   .card-live-banner{
     background:var(--red);
     color:#fff;
@@ -567,8 +576,10 @@
 
     return {
       oggi: events.filter(e => e.dateObj >= startToday && e.dateObj < endToday),
-      settimana: events.filter(e => e.dateObj >= startToday && e.dateObj < endWeek),
-      mese: events.filter(e => e.dateObj >= startToday && e.dateObj < endMonth),
+      // "Questa settimana" parte da domani: gli eventi di oggi sono già nella loro sezione
+      settimana: events.filter(e => e.dateObj >= endToday && e.dateObj < endWeek),
+      // "Questo mese" parte da dopo la settimana corrente, per non ripetere oggi/settimana
+      mese: events.filter(e => e.dateObj >= endWeek && e.dateObj < endMonth),
       passati: events
         .filter(e => e.dateObj >= startWeekAgo && e.dateObj < startToday)
         .sort((a, b) => b.dateObj - a.dateObj), // più recenti prima
@@ -639,6 +650,7 @@
 
     list.forEach((e) => {
       const card = document.createElement('div');
+      card.dataset.eventId = e.id;
       const live = !isPastTab && isLive(e, now);
       const elapsed = !isPastTab && isElapsed(e, now);
       const isNext = !isPastTab && nextEvent && e.id === nextEvent.id;
@@ -738,6 +750,62 @@
 
   document.getElementById('segnala-link').href = "https://forms.gle/357kSGUfBum8gNg58";
 
+  // In quale sezione si trova un dato evento (oggi / settimana / mese / passati)?
+  function findTabForEvent(eventId, buckets) {
+    const id = String(eventId);
+    if (buckets.oggi.some(e => String(e.id) === id)) return 'oggi';
+    if (buckets.settimana.some(e => String(e.id) === id)) return 'settimana';
+    if (buckets.mese.some(e => String(e.id) === id)) return 'mese';
+    if (buckets.passati.some(e => String(e.id) === id)) return 'passati';
+    return null; // evento non presente in nessuna sezione visibile (troppo lontano nel tempo)
+  }
+
+  // Scorre fino alla card dell'evento e la fa pulsare, per farla notare.
+  // Riprova un paio di volte: subito dopo il render il layout potrebbe
+  // non essere ancora del tutto stabile (immagini, font, ecc.).
+  function scrollToEventCard(eventId, attempt = 0) {
+    const card = document.querySelector(`.card[data-event-id="${CSS.escape(String(eventId))}"]`);
+    if (!card) {
+      if (attempt < 10) setTimeout(() => scrollToEventCard(eventId, attempt + 1), 120);
+      return;
+    }
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    card.classList.add('shared-highlight');
+    setTimeout(() => card.classList.remove('shared-highlight'), 2400);
+  }
+
+  // Se l'URL contiene ?event=ID (arrivato da una condivisione), apre
+  // automaticamente la sezione giusta e scorre fino a quell'evento.
+  // Ritorna true se ha gestito un evento condiviso, false altrimenti.
+  function handleSharedEvent() {
+    const params = new URLSearchParams(window.location.search);
+    const sharedId = params.get('event');
+    if (!sharedId) return false;
+
+    const buckets = getBuckets();
+    const tab = findTabForEvent(sharedId, buckets);
+
+    // Ripulisce l'URL subito, così un refresh o un cambio tab successivo
+    // non ripete lo scroll/l'evidenziazione
+    history.replaceState({}, '', window.location.pathname);
+
+    if (!tab) return false; // evento non trovato (es. ormai troppo vecchio)
+
+    if (tab === 'passati') {
+      inPastView = true;
+      tabsNav.style.display = 'none';
+      pastBtn.textContent = '← Torna agli eventi';
+      pastBtn.classList.add('active-past');
+      render('passati');
+    } else {
+      exitPastView();
+      render(tab);
+    }
+
+    scrollToEventCard(sharedId);
+    return true;
+  }
+
   async function init() {
     const container = document.getElementById('list');
     container.innerHTML = '<div class="empty">Carico gli eventi…</div>';
@@ -747,7 +815,8 @@
       .map(e => ({ ...e, dateObj: new Date(e.date), endDateObj: e.end ? new Date(e.end) : null }))
       .sort((a, b) => a.dateObj - b.dateObj);
 
-    render('oggi');
+    const handledShare = handleSharedEvent();
+    if (!handledShare) render('oggi');
   }
 
   init();
@@ -1051,8 +1120,10 @@
   // (menu "condividi" del telefono) con fallback su copia negli appunti
   // per i browser/desktop che non la supportano.
   async function shareEvent(e) {
-    const text = `${e.title}\n📍 ${e.place}\n🗓️ ${formatDate(e)}`;
-    const url = (e.link && e.link !== '#') ? e.link : window.location.href;
+    const text = `📅 ${e.title}\n📍 ${e.place}\n🗓️ ${formatDate(e)}\n\nScopri di più su Uni Events:`;
+    // Link al nostro sito con l'id dell'evento: aprendolo, l'app va
+    // automaticamente alla sezione giusta e mette in evidenza la card
+    const url = `${window.location.origin}${window.location.pathname}?event=${encodeURIComponent(e.id)}`;
 
     if (navigator.share) {
       try {
