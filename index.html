@@ -261,6 +261,13 @@
     gap:10px;
     margin-top:10px;
   }
+  .card-action-buttons{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-shrink:0;
+    margin-left:auto;
+  }
 
   /* Pannello dettagli: animato con la tecnica "grid-template-rows"
      per un'apertura/chiusura fluida senza dover calcolare altezze in JS */
@@ -300,11 +307,34 @@
     padding:8px 14px;
     border-radius:6px;
     cursor:pointer;
+    white-space:nowrap;
   }
   .remind-btn.active{
     background:var(--red);
     border-color:var(--red);
     color:#fff;
+  }
+  .share-btn{
+    flex-shrink:0;
+    background:var(--paper);
+    border:1px solid var(--line);
+    color:var(--ink);
+    padding:8px;
+    width:34px;
+    height:34px;
+    border-radius:6px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .share-btn:hover{
+    border-color:var(--muted);
+  }
+  .share-btn svg{
+    width:16px;
+    height:16px;
+    display:block;
   }
 
   .empty{
@@ -578,6 +608,9 @@
     passati: { text: "Nessun evento negli ultimi 7 giorni.", jump: null, cta: null },
   };
 
+  // Icona "condividi" (SVG inline, eredita il colore col currentColor)
+  const SHARE_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.6" x2="15.4" y2="6.4"/><line x1="8.6" y1="13.4" x2="15.4" y2="17.6"/></svg>`;
+
   function render(tab) {
     document.querySelectorAll('.tab').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.tab === tab);
@@ -632,11 +665,13 @@
           ${hasDetails ? `<svg class="card-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>` : ''}
         </div>
         <div class="card-place">📍 ${e.place}</div>
-        ${(hasDetails || canRemind) ? `
         <div class="card-action-row">
           ${hasDetails ? `<div class="card-hint">Clicca per maggiori info</div>` : `<div></div>`}
-          ${canRemind ? `<button class="remind-btn${isReminded ? ' active' : ''}" data-event-id="${e.id}">${isReminded ? '🔔 Promemoria attivo' : '🔔 Ricordamelo'}</button>` : ''}
-        </div>` : ''}
+          <div class="card-action-buttons">
+            <button class="share-btn" data-event-id="${e.id}" title="Condividi evento" aria-label="Condividi evento">${SHARE_ICON}</button>
+            ${canRemind ? `<button class="remind-btn${isReminded ? ' active' : ''}" data-event-id="${e.id}">${isReminded ? '🔔 Promemoria attivo' : '🔔 Ricordamelo'}</button>` : ''}
+          </div>
+        </div>
         ${hasDetails ? `
         <div class="card-details">
           <div class="card-details-inner">
@@ -655,6 +690,14 @@
         remindBtn.addEventListener('click', (evt) => {
           evt.stopPropagation();
           remindMe(e.id, remindBtn);
+        });
+      }
+
+      const shareBtn = card.querySelector('.share-btn');
+      if (shareBtn) {
+        shareBtn.addEventListener('click', (evt) => {
+          evt.stopPropagation();
+          shareEvent(e);
         });
       }
 
@@ -1002,6 +1045,32 @@
     btnEl.textContent = '🔔 Promemoria attivo';
     btnEl.classList.add('active');
     showToast('🔔 Fatto! Ti avviseremo la mattina di questo evento, così non te lo perdi.');
+  }
+
+  // Bottone di condivisione su ogni card: usa la Web Share API nativa
+  // (menu "condividi" del telefono) con fallback su copia negli appunti
+  // per i browser/desktop che non la supportano.
+  async function shareEvent(e) {
+    const text = `${e.title}\n📍 ${e.place}\n🗓️ ${formatDate(e)}`;
+    const url = (e.link && e.link !== '#') ? e.link : window.location.href;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: e.title, text, url });
+      } catch (err) {
+        // l'utente ha annullato la condivisione: nessun errore da mostrare
+        if (err.name !== 'AbortError') console.warn('Errore condivisione:', err);
+      }
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(`${text}\n${url}`);
+      showToast('📋 Copiato negli appunti!');
+    } catch (err) {
+      console.warn('Copia negli appunti fallita:', err);
+      alert(`${text}\n${url}`);
+    }
   }
 </script>
 </body>
