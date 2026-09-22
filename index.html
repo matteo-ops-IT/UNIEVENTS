@@ -695,9 +695,33 @@
 
   document.getElementById('segnala-link').href = "https://forms.gle/357kSGUfBum8gNg58";
 
+  // ==================================================================
+  // TRACCIAMENTO VISITE
+  // Registra una riga in Supabase (tabella "page_views") ogni volta
+  // che qualcuno apre il sito. Serve per sapere quante visite avete.
+  // NB: va creata la tabella "page_views" su Supabase (vedi guida).
+  // ==================================================================
+  async function logPageView() {
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/page_views`, {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ user_agent: navigator.userAgent }),
+      });
+    } catch (err) {
+      console.warn('Errore registrazione visita (non blocca il sito):', err);
+    }
+  }
+
   async function init() {
     const container = document.getElementById('list');
     container.innerHTML = '<div class="empty">Carico gli eventi…</div>';
+
+    logPageView();
 
     const rawEvents = await fetchEvents();
     events = rawEvents
@@ -719,6 +743,25 @@
       });
     });
   }
+
+  // ==================================================================
+  // TRACCIAMENTO INSTALLAZIONI PWA
+  // Il browser lancia questo evento quando l'utente installa davvero
+  // l'app (sia da Android/Chrome col prompt, sia da iOS/Safari).
+  // Registra una riga in Supabase (tabella "installs").
+  // NB: va creata la tabella "installs" su Supabase (vedi guida).
+  // ==================================================================
+  window.addEventListener('appinstalled', () => {
+    fetch(`${SUPABASE_URL}/rest/v1/installs`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({}),
+    }).catch(err => console.warn('Errore registrazione installazione:', err));
+  });
 
   (function setupInstallBanner() {
     const banner = document.getElementById('install-banner');
