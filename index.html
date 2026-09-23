@@ -846,6 +846,47 @@
   init();
 
   // ==================================================================
+  // AGGIORNAMENTO: tira giù per ricaricare + ricarica alla riapertura
+  // ==================================================================
+  let lastRefresh = Date.now();
+
+  async function refreshEvents() {
+    lastRefresh = Date.now();
+    const raw = await fetchEvents();
+    events = raw
+      .map(e => ({ ...e, dateObj: new Date(e.date), endDateObj: e.end ? new Date(e.end) : null }))
+      .sort((a, b) => a.dateObj - b.dateObj);
+    const tab = inPastView
+      ? 'passati'
+      : (document.querySelector('.tab.active')?.dataset.tab || 'oggi');
+    render(tab);
+  }
+
+  // Riaprendo l'app (dopo più di 1 minuto) si aggiorna da sola
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && Date.now() - lastRefresh > 60000) {
+      refreshEvents();
+    }
+  });
+
+  // Tira giù dalla cima della pagina per aggiornare
+  let pullStartY = 0, pulling = false;
+  document.addEventListener('touchstart', (e) => {
+    if (window.scrollY <= 0) {
+      pullStartY = e.touches[0].clientY;
+      pulling = true;
+    }
+  }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    if (!pulling) return;
+    pulling = false;
+    if (e.changedTouches[0].clientY - pullStartY > 90) {
+      showToast('🔄 Aggiorno gli eventi…', 1500);
+      refreshEvents();
+    }
+  });
+
+  // ==================================================================
   // PWA: service worker + banner "Aggiungi alla schermata Home"
   // ==================================================================
   if ('serviceWorker' in navigator) {
