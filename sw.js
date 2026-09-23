@@ -2,7 +2,7 @@
 // come app (requisito tecnico di Chrome/Android). Fa anche un piccolo
 // caching di base della pagina principale per un caricamento più veloce.
 
-const CACHE_NAME = "uni-events-v1";
+const CACHE_NAME = "uni-events-v2";
 const APP_SHELL = ["/", "/index.html"];
 
 self.addEventListener("install", (event) => {
