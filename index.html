@@ -346,6 +346,11 @@
     color:var(--muted);
     margin-top:2px;
   }
+  .sub-desc{
+    font-size:13.5px;
+    line-height:1.45;
+    margin-top:4px;
+  }
   .remind-btn{
     flex-shrink:0;
     background:var(--paper);
@@ -586,8 +591,8 @@
       .map(line => line.trim())
       .filter(line => line)
       .map(line => {
-        const [time, title, place] = line.split('|').map(x => (x || '').trim());
-        return { time, title, place };
+        const parts = line.split('|').map(x => x.trim());
+        return { time: parts[0], title: parts[1], place: parts[2], description: parts.slice(3).join(' | ') };
       });
   }
 
@@ -776,6 +781,7 @@
                 <div>
                   <div class="sub-name">${x.title || ''}</div>
                   ${x.place ? `<div class="sub-place">📍 ${x.place}</div>` : ''}
+                  ${x.description ? `<div class="sub-desc">${x.description}</div>` : ''}
                 </div>
               </div>`).join('')}
             </div>` : ''}
