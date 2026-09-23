@@ -571,17 +571,24 @@
 
   let events = [];
 
-  // Legge la colonna sub_events (lista di mini-eventi dentro un evento).
-  // Accetta sia JSON già letto sia testo; se qualcosa non va, ritorna lista vuota.
+  // Legge la colonna sub_events. Formato semplice: una riga per appuntamento,
+  //   20:30 | Titolo | Luogo
+  // (accetta anche il vecchio formato JSON, se presente)
   function parseSubEvents(raw) {
     if (!raw) return [];
-    try {
-      const arr = typeof raw === 'string' ? JSON.parse(raw) : raw;
-      return Array.isArray(arr) ? arr : [];
-    } catch (err) {
-      console.warn('sub_events non valido:', err);
-      return [];
+    if (Array.isArray(raw)) return raw;
+    const text = String(raw).trim();
+    if (!text) return [];
+    if (text.startsWith('[')) {
+      try { return JSON.parse(text); } catch (err) { console.warn('sub_events non valido:', err); }
     }
+    return text.split('\n')
+      .map(line => line.trim())
+      .filter(line => line)
+      .map(line => {
+        const [time, title, place] = line.split('|').map(x => (x || '').trim());
+        return { time, title, place };
+      });
   }
 
   async function fetchEvents() {
