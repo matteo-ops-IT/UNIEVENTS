@@ -312,6 +312,40 @@
     line-height:1.55;
     color:var(--ink);
   }
+  .sub-events{
+    margin-top:14px;
+    border-top:1px dashed var(--line);
+    padding-top:12px;
+  }
+  .sub-events-title{
+    font-family:'Archivo Black',sans-serif;
+    font-size:13px;
+    margin-bottom:8px;
+  }
+  .sub-item{
+    display:flex;
+    gap:12px;
+    padding:8px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .sub-item:last-child{ border-bottom:none; }
+  .sub-time{
+    flex-shrink:0;
+    min-width:44px;
+    font-size:13px;
+    font-weight:700;
+    color:var(--red);
+  }
+  .sub-name{
+    font-size:14.5px;
+    font-weight:600;
+    line-height:1.35;
+  }
+  .sub-place{
+    font-size:13px;
+    color:var(--muted);
+    margin-top:2px;
+  }
   .remind-btn{
     flex-shrink:0;
     background:var(--paper);
@@ -537,6 +571,19 @@
 
   let events = [];
 
+  // Legge la colonna sub_events (lista di mini-eventi dentro un evento).
+  // Accetta sia JSON già letto sia testo; se qualcosa non va, ritorna lista vuota.
+  function parseSubEvents(raw) {
+    if (!raw) return [];
+    try {
+      const arr = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      return Array.isArray(arr) ? arr : [];
+    } catch (err) {
+      console.warn('sub_events non valido:', err);
+      return [];
+    }
+  }
+
   async function fetchEvents() {
     try {
       const res = await fetch(
@@ -559,6 +606,7 @@
         link: e.link,
         image_url: e.image_url,
         description: e.description,
+        sub_events: parseSubEvents(e.sub_events),
       }));
     } catch (err) {
       console.warn("Fetch Supabase fallito, uso eventi di riserva:", err);
@@ -685,7 +733,8 @@
         + (elapsed && !isNext ? ' elapsed' : '')
         + (isPastTab ? ' past' : '');
 
-      const hasDetails = !!(e.image_url || e.description);
+      const subs = e.sub_events || [];
+      const hasDetails = !!(e.image_url || e.description || subs.length);
       const canRemind = !isPastTab;
       const isReminded = !!localStorage.getItem('ue_reminded_' + e.id);
       const hasSource = !!(e.link && e.link !== '#');
@@ -712,7 +761,17 @@
         <div class="card-details">
           <div class="card-details-inner">
             ${e.image_url ? `<img class="card-image" src="${e.image_url}" alt="Locandina evento" loading="lazy" onerror="this.remove()">` : ''}
-            <div class="card-description">${e.description || 'Nessuna descrizione disponibile.'}</div>
+            ${(e.description || !subs.length) ? `<div class="card-description">${e.description || 'Nessuna descrizione disponibile.'}</div>` : ''}
+            ${subs.length ? `<div class="sub-events">
+              <div class="sub-events-title">Programma (${subs.length} appuntamenti)</div>
+              ${subs.map(x => `<div class="sub-item">
+                <div class="sub-time">${x.time || ''}</div>
+                <div>
+                  <div class="sub-name">${x.title || ''}</div>
+                  ${x.place ? `<div class="sub-place">📍 ${x.place}</div>` : ''}
+                </div>
+              </div>`).join('')}
+            </div>` : ''}
           </div>
         </div>` : ''}
       `;
@@ -844,6 +903,47 @@
   }
 
   init();
+
+  // ==================================================================
+  // AGGIORNAMENTO: tira giù per ricaricare + ricarica alla riapertura
+  // ==================================================================
+  let lastRefresh = Date.now();
+
+  async function refreshEvents() {
+    lastRefresh = Date.now();
+    const raw = await fetchEvents();
+    events = raw
+      .map(e => ({ ...e, dateObj: new Date(e.date), endDateObj: e.end ? new Date(e.end) : null }))
+      .sort((a, b) => a.dateObj - b.dateObj);
+    const tab = inPastView
+      ? 'passati'
+      : (document.querySelector('.tab.active')?.dataset.tab || 'oggi');
+    render(tab);
+  }
+
+  // Riaprendo l'app (dopo più di 1 minuto) si aggiorna da sola
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && Date.now() - lastRefresh > 60000) {
+      refreshEvents();
+    }
+  });
+
+  // Tira giù dalla cima della pagina per aggiornare
+  let pullStartY = 0, pulling = false;
+  document.addEventListener('touchstart', (e) => {
+    if (window.scrollY <= 0) {
+      pullStartY = e.touches[0].clientY;
+      pulling = true;
+    }
+  }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    if (!pulling) return;
+    pulling = false;
+    if (e.changedTouches[0].clientY - pullStartY > 90) {
+      showToast('🔄 Aggiorno gli eventi…', 1500);
+      refreshEvents();
+    }
+  });
 
   // ==================================================================
   // PWA: service worker + banner "Aggiungi alla schermata Home"
