@@ -577,7 +577,7 @@
   let events = [];
 
   // Legge la colonna sub_events. Formato semplice: una riga per appuntamento,
-  //   20:30 | Titolo | Luogo
+  //   Titolo | Luogo | 20:30 | Descrizione
   // (accetta anche il vecchio formato JSON, se presente)
   function parseSubEvents(raw) {
     if (!raw) return [];
@@ -592,7 +592,7 @@
       .filter(line => line)
       .map(line => {
         const parts = line.split('|').map(x => x.trim());
-        return { time: parts[0], title: parts[1], place: parts[2], description: parts.slice(3).join(' | ') };
+        return { title: parts[0], place: parts[1], time: parts[2], description: parts.slice(3).join(' | ') };
       });
   }
 
