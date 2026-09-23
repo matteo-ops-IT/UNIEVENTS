@@ -131,6 +131,13 @@
     gap:18px;
   }
 
+  .day-separator{
+    font-family:'Archivo Black',sans-serif;
+    font-size:15px;
+    color:var(--ink);
+    margin:6px 2px -6px;
+  }
+
   .card{
     position:relative;
     background:#fff;
@@ -464,14 +471,8 @@
     cursor:pointer;
     white-space:nowrap;
   }
-  .install-banner-close{
-    background:none !important;
-    color:var(--paper) !important;
-    font-size:18px !important;
-    padding:0 4px !important;
-    line-height:1;
-  }
 </style>
+<script defer src="https://cloud.umami.is/script.js" data-website-id="ccaa6b2a-5f24-4c32-a88a-ac752c7201fb"></script>
 </head>
 <body>
   <div class="wrap">
@@ -511,7 +512,6 @@
       Aggiungilo alla schermata Home per aprirlo come un'app.
     </div>
     <button id="install-banner-action">Installa</button>
-    <button class="install-banner-close" id="install-banner-close" aria-label="Chiudi">✕</button>
   </div>
 
 <script>
@@ -586,6 +586,18 @@
     };
   }
 
+  // Etichetta per i separatori di data nella sezione "Questa settimana":
+  // "Domani" per il giorno successivo a oggi, poi il nome del giorno
+  // (Giovedì, Venerdì, ...) per tutti gli altri.
+  function dayLabel(dateObj, now) {
+    const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startTarget = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+    const diffDays = Math.round((startTarget - startToday) / 86400000);
+    if (diffDays === 1) return 'Domani';
+    const name = dateObj.toLocaleDateString('it-IT', { weekday: 'long' });
+    return name.charAt(0).toUpperCase() + name.slice(1);
+  }
+
   function formatDate(e) {
     const s = e.dateObj.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' });
     const startT = e.dateObj.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
@@ -647,8 +659,20 @@
     const isPastTab = tab === 'passati';
     const now = new Date();
     const nextEvent = isPastTab ? null : getNextEvent(now);
+    let lastDayKey = null;
 
     list.forEach((e) => {
+      if (tab === 'settimana') {
+        const dayKey = e.dateObj.toDateString();
+        if (dayKey !== lastDayKey) {
+          lastDayKey = dayKey;
+          const sep = document.createElement('div');
+          sep.className = 'day-separator';
+          sep.textContent = dayLabel(e.dateObj, now);
+          container.appendChild(sep);
+        }
+      }
+
       const card = document.createElement('div');
       card.dataset.eventId = e.id;
       const live = !isPastTab && isLive(e, now);
@@ -836,10 +860,6 @@
     const banner = document.getElementById('install-banner');
     const textEl = document.getElementById('install-banner-text');
     const actionBtn = document.getElementById('install-banner-action');
-    const closeBtn = document.getElementById('install-banner-close');
-
-    const STORAGE_KEY = 'ue_install_dismissed';
-    if (localStorage.getItem(STORAGE_KEY) === '1') return;
 
     const isStandalone =
       window.matchMedia('(display-mode: standalone)').matches ||
@@ -852,11 +872,6 @@
     function showBanner() {
       banner.classList.add('visible');
     }
-    function dismiss() {
-      banner.classList.remove('visible');
-      localStorage.setItem(STORAGE_KEY, '1');
-    }
-    closeBtn.addEventListener('click', dismiss);
 
     if (isIOS) {
       // iOS non ha un popup automatico: mostriamo istruzioni manuali.
