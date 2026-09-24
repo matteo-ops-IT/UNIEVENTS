@@ -312,6 +312,45 @@
     line-height:1.55;
     color:var(--ink);
   }
+  .sub-events{
+    margin-top:14px;
+    border-top:1px dashed var(--line);
+    padding-top:12px;
+  }
+  .sub-events-title{
+    font-family:'Archivo Black',sans-serif;
+    font-size:13px;
+    margin-bottom:8px;
+  }
+  .sub-item{
+    display:flex;
+    gap:12px;
+    padding:8px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .sub-item:last-child{ border-bottom:none; }
+  .sub-time{
+    flex-shrink:0;
+    min-width:44px;
+    font-size:13px;
+    font-weight:700;
+    color:var(--red);
+  }
+  .sub-name{
+    font-size:14.5px;
+    font-weight:600;
+    line-height:1.35;
+  }
+  .sub-place{
+    font-size:13px;
+    color:var(--muted);
+    margin-top:2px;
+  }
+  .sub-desc{
+    font-size:13.5px;
+    line-height:1.45;
+    margin-top:4px;
+  }
   .remind-btn{
     flex-shrink:0;
     background:var(--paper);
@@ -537,6 +576,26 @@
 
   let events = [];
 
+  // Legge la colonna sub_events. Formato semplice: una riga per appuntamento,
+  //   Titolo | Luogo | 20:30 | Descrizione
+  // (accetta anche il vecchio formato JSON, se presente)
+  function parseSubEvents(raw) {
+    if (!raw) return [];
+    if (Array.isArray(raw)) return raw;
+    const text = String(raw).trim();
+    if (!text) return [];
+    if (text.startsWith('[')) {
+      try { return JSON.parse(text); } catch (err) { console.warn('sub_events non valido:', err); }
+    }
+    return text.split('\n')
+      .map(line => line.trim())
+      .filter(line => line)
+      .map(line => {
+        const parts = line.split('|').map(x => x.trim());
+        return { title: parts[0], place: parts[1], time: parts[2], description: parts.slice(3).join(' | ') };
+      });
+  }
+
   async function fetchEvents() {
     try {
       const res = await fetch(
@@ -559,6 +618,7 @@
         link: e.link,
         image_url: e.image_url,
         description: e.description,
+        sub_events: parseSubEvents(e.sub_events),
       }));
     } catch (err) {
       console.warn("Fetch Supabase fallito, uso eventi di riserva:", err);
@@ -685,7 +745,8 @@
         + (elapsed && !isNext ? ' elapsed' : '')
         + (isPastTab ? ' past' : '');
 
-      const hasDetails = !!(e.image_url || e.description);
+      const subs = e.sub_events || [];
+      const hasDetails = !!(e.image_url || e.description || subs.length);
       const canRemind = !isPastTab;
       const isReminded = !!localStorage.getItem('ue_reminded_' + e.id);
       const hasSource = !!(e.link && e.link !== '#');
@@ -712,7 +773,18 @@
         <div class="card-details">
           <div class="card-details-inner">
             ${e.image_url ? `<img class="card-image" src="${e.image_url}" alt="Locandina evento" loading="lazy" onerror="this.remove()">` : ''}
-            <div class="card-description">${e.description || 'Nessuna descrizione disponibile.'}</div>
+            ${(e.description || !subs.length) ? `<div class="card-description">${e.description || 'Nessuna descrizione disponibile.'}</div>` : ''}
+            ${subs.length ? `<div class="sub-events">
+              <div class="sub-events-title">Programma (${subs.length} appuntamenti)</div>
+              ${subs.map(x => `<div class="sub-item">
+                <div class="sub-time">${x.time || ''}</div>
+                <div>
+                  <div class="sub-name">${x.title || ''}</div>
+                  ${x.place ? `<div class="sub-place">📍 ${x.place}</div>` : ''}
+                  ${x.description ? `<div class="sub-desc">${x.description}</div>` : ''}
+                </div>
+              </div>`).join('')}
+            </div>` : ''}
           </div>
         </div>` : ''}
       `;
