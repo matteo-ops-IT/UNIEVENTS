@@ -576,6 +576,12 @@
 
   let events = [];
 
+  // Manda un evento a Umami, se è caricato (se lo script fosse bloccato
+  // da un ad-blocker, non deve rompere il resto del sito)
+  function track(name, data) {
+    try { window.umami && window.umami.track(name, data); } catch (err) {}
+  }
+
   // Legge la colonna sub_events. Formato semplice: una riga per appuntamento,
   //   Titolo | Luogo | 20:30 | Descrizione
   // (accetta anche il vecchio formato JSON, se presente)
@@ -755,7 +761,7 @@
         ${live ? `<div class="card-live-banner">🔴 Evento live in questo momento: sei ancora in tempo!</div>` : ''}
         <div class="card-top-row">
           <div class="card-meta">${isNext ? 'Il prossimo · ' : ''}${formatDate(e)}</div>
-          ${hasSource ? `<a class="source-pill" href="${e.link}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">🔗 Fonte</a>` : ''}
+          ${hasSource ? `<a class="source-pill" href="${e.link}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation(); track('click_fonte', {evento: '${e.title.replace(/'/g, "\\'")}'})">🔗 Fonte</a>` : ''}
         </div>
         <div class="card-title-row">
           <div class="card-title">${e.title}</div>
@@ -790,13 +796,19 @@
       `;
 
       if (hasDetails) {
-        card.addEventListener('click', () => card.classList.toggle('expanded'));
+        card.addEventListener('click', () => {
+          const opening = !card.classList.contains('expanded');
+          card.classList.toggle('expanded');
+          if (opening) track('apri_dettagli', { evento: e.title });
+        });
       }
 
       const remindBtn = card.querySelector('.remind-btn');
       if (remindBtn) {
         remindBtn.addEventListener('click', (evt) => {
           evt.stopPropagation();
+          const activating = !remindBtn.classList.contains('active');
+          track(activating ? 'click_ricordamelo' : 'rimuovi_ricordamelo', { evento: e.title });
           remindMe(e.id, remindBtn);
         });
       }
@@ -805,6 +817,7 @@
       if (shareBtn) {
         shareBtn.addEventListener('click', (evt) => {
           evt.stopPropagation();
+          track('click_condividi', { evento: e.title });
           shareEvent(e);
         });
       }
@@ -1004,6 +1017,9 @@
       return;
     }
 
+    // Si accorge quando l'app viene DAVVERO installata (non solo cliccato "Installa")
+    window.addEventListener('appinstalled', () => track('app_installata'));
+
     // Android / Chrome: usiamo il prompt nativo del browser
     let deferredPrompt = null;
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -1014,6 +1030,7 @@
 
     actionBtn.addEventListener('click', async () => {
       if (!deferredPrompt) return;
+      track('click_installa_banner');
       deferredPrompt.prompt();
       await deferredPrompt.userChoice;
       deferredPrompt = null;
@@ -1127,6 +1144,7 @@
     btn.addEventListener('click', async () => {
       // Se è già attivo, un secondo click lo disattiva
       if (localStorage.getItem('ue_notify_new') === '1') {
+        track('disattiva_avvisami');
         const subId = localStorage.getItem('ue_sub_id');
         const originalText = btn.textContent;
         btn.textContent = 'Un attimo...';
@@ -1151,6 +1169,7 @@
         return;
       }
 
+      track('click_avvisami');
       const originalText = btn.textContent;
       btn.textContent = 'Un attimo...';
       const id = await ensureSubscribed();
