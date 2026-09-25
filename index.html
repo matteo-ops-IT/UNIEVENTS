@@ -913,6 +913,13 @@
 
     const handledShare = handleSharedEvent();
     if (!handledShare) render('oggi');
+
+    // Se l'utente aveva già attivato le notifiche in passato, rinnova
+    // silenziosamente l'iscrizione ogni volta che apre l'app, così resta
+    // valida più a lungo (non chiede di nuovo il permesso: lo ha già dato).
+    if (localStorage.getItem('ue_notify_new') === '1' || localStorage.getItem('ue_sub_id')) {
+      ensureSubscribed().catch(() => {});
+    }
   }
 
   init();
