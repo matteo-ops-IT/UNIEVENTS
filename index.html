@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Uni Events</title>
+<meta name="description" content="Quello che succede all'Unical, prima che finisca. Tutti gli eventi del campus in un unico posto.">
+
+<!-- Anteprima quando il link viene condiviso su WhatsApp, Instagram, ecc. -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Uni Events — Gli eventi dell'Unical">
+<meta property="og:description" content="Quello che succede all'Unical, prima che finisca. Tutti gli eventi del campus in un unico posto.">
+<meta property="og:image" content="https://TUO-DOMINIO/social-preview.png">
+<meta property="og:url" content="https://TUO-DOMINIO/">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1B1B1D">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -136,6 +145,19 @@
     font-size:15px;
     color:var(--ink);
     margin:6px 2px -6px;
+  }
+  .month-separator{
+    font-family:'Archivo Black',sans-serif;
+    font-size:19px;
+    color:var(--red);
+    margin:14px 2px -6px;
+    padding-top:10px;
+    border-top:1px solid var(--line);
+  }
+  .list > .month-separator:first-child{
+    border-top:none;
+    padding-top:0;
+    margin-top:0;
   }
 
   .card{
@@ -523,7 +545,7 @@
     <nav class="tabs" id="tabs">
       <button class="tab active" data-tab="oggi">Oggi</button>
       <button class="tab" data-tab="settimana">Questa settimana</button>
-      <button class="tab" data-tab="mese">Questo mese</button>
+      <button class="tab" data-tab="mese">Prossimamente</button>
     </nav>
 
     <div class="past-row">
@@ -637,15 +659,15 @@
     const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const endToday = new Date(startToday); endToday.setDate(startToday.getDate() + 1);
     const endWeek = new Date(startToday); endWeek.setDate(startToday.getDate() + 7);
-    const endMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
     const startWeekAgo = new Date(startToday); startWeekAgo.setDate(startToday.getDate() - 7);
 
     return {
       oggi: events.filter(e => e.dateObj >= startToday && e.dateObj < endToday),
       // "Questa settimana" parte da domani: gli eventi di oggi sono già nella loro sezione
       settimana: events.filter(e => e.dateObj >= endToday && e.dateObj < endWeek),
-      // "Questo mese" parte da dopo la settimana corrente, per non ripetere oggi/settimana
-      mese: events.filter(e => e.dateObj >= endWeek && e.dateObj < endMonth),
+      // "Prossimamente" parte da dopo la settimana corrente, senza limite massimo:
+      // include anche i mesi successivi
+      mese: events.filter(e => e.dateObj >= endWeek),
       passati: events
         .filter(e => e.dateObj >= startWeekAgo && e.dateObj < startToday)
         .sort((a, b) => b.dateObj - a.dateObj), // più recenti prima
@@ -655,6 +677,20 @@
   // Etichetta per i separatori di data nella sezione "Questa settimana":
   // "Domani" per il giorno successivo a oggi, poi il nome del giorno
   // (Giovedì, Venerdì, ...) per tutti gli altri.
+  const MONTHS_IT = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
+
+  // Separatore usato in "Prossimamente": es. "Ottobre" quando cambia mese,
+  // poi "Luned\u00ec 6" per ogni giorno diverso dentro quel mese
+  function monthDayLabel(dateObj) {
+    const weekday = dateObj.toLocaleDateString('it-IT', { weekday: 'long' });
+    const w = weekday.charAt(0).toUpperCase() + weekday.slice(1);
+    return `${w} ${dateObj.getDate()}`;
+  }
+  function monthLabel(dateObj) {
+    const m = MONTHS_IT[dateObj.getMonth()];
+    return m.charAt(0).toUpperCase() + m.slice(1);
+  }
+
   function dayLabel(dateObj, now) {
     const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const startTarget = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
@@ -693,7 +729,7 @@
   const emptyMessages = {
     oggi: { text: "Nessun evento in programma per oggi.", jump: "settimana", cta: "Guarda questa settimana" },
     settimana: { text: "Nessun evento in programma questa settimana.", jump: "mese", cta: "Guarda questo mese" },
-    mese: { text: "Nessun evento ancora segnalato per questo mese.", jump: null, cta: null },
+    mese: { text: "Nessun evento in programma nei prossimi giorni.", jump: null, cta: null },
     passati: { text: "Nessun evento negli ultimi 7 giorni.", jump: null, cta: null },
   };
 
@@ -726,6 +762,7 @@
     const now = new Date();
     const nextEvent = isPastTab ? null : getNextEvent(now);
     let lastDayKey = null;
+    let lastMonthKey = null;
 
     list.forEach((e) => {
       if (tab === 'settimana') {
@@ -735,6 +772,26 @@
           const sep = document.createElement('div');
           sep.className = 'day-separator';
           sep.textContent = dayLabel(e.dateObj, now);
+          container.appendChild(sep);
+        }
+      }
+
+      if (tab === 'mese') {
+        const monthKey = e.dateObj.getFullYear() + '-' + e.dateObj.getMonth();
+        if (monthKey !== lastMonthKey) {
+          lastMonthKey = monthKey;
+          lastDayKey = null;
+          const msep = document.createElement('div');
+          msep.className = 'month-separator';
+          msep.textContent = monthLabel(e.dateObj);
+          container.appendChild(msep);
+        }
+        const dayKey = e.dateObj.toDateString();
+        if (dayKey !== lastDayKey) {
+          lastDayKey = dayKey;
+          const sep = document.createElement('div');
+          sep.className = 'day-separator';
+          sep.textContent = monthDayLabel(e.dateObj);
           container.appendChild(sep);
         }
       }
