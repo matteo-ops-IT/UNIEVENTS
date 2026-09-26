@@ -519,6 +519,186 @@
     font-size:17px;
     margin-bottom:3px;
   }
+  /* ============ MODALITÀ "SCOPRI" (stile TikTok) ============ */
+  .mode-switch{
+    position:fixed;
+    top:calc(14px + env(safe-area-inset-top,0px));
+    right:16px;
+    z-index:400;
+    background:rgba(0,0,0,0.45);
+    backdrop-filter:blur(6px);
+    color:#fff;
+    border:1px solid rgba(255,255,255,0.35);
+    font-family:'Inter',sans-serif;
+    font-weight:700;
+    font-size:13px;
+    padding:9px 14px;
+    border-radius:100px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .discover-overlay{
+    position:fixed;
+    inset:0;
+    background:#000;
+    z-index:300;
+    display:none;
+    flex-direction:column;
+  }
+  .discover-overlay.visible{ display:flex; }
+  .discover-feed{
+    flex:1;
+    overflow-y:auto;
+    scroll-snap-type:y mandatory;
+    scroll-behavior:smooth;
+  }
+  .discover-slide{
+    position:relative;
+    height:100%;
+    height:100dvh;
+    scroll-snap-align:start;
+    scroll-snap-stop:always;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-end;
+    overflow:hidden;
+    color:#fff;
+  }
+  .discover-slide-backdrop{
+    position:absolute;
+    inset:-20px;
+    background-size:cover;
+    background-position:center;
+    filter:blur(22px) brightness(0.55);
+    transform:scale(1.15);
+  }
+  .discover-slide-backdrop.no-image{
+    background:linear-gradient(155deg,#3a1113,#1B1B1D 70%);
+    filter:none;
+    transform:none;
+  }
+  .discover-slide-poster{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:0 0 26vh;
+  }
+  .discover-slide-poster img{
+    max-width:100%;
+    max-height:100%;
+    object-fit:contain;
+    display:block;
+  }
+  .discover-slide-gradient{
+    position:absolute;
+    inset:0;
+    background:linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.15) 40%, rgba(0,0,0,0.92) 100%);
+  }
+  .discover-content{
+    position:relative;
+    padding:18px 20px calc(26px + env(safe-area-inset-bottom,0px));
+  }
+  .discover-date-badge{
+    display:inline-block;
+    background:var(--red);
+    color:#fff;
+    font-weight:700;
+    font-size:13.5px;
+    padding:6px 12px;
+    border-radius:100px;
+    margin-bottom:12px;
+  }
+  .discover-title{
+    font-family:'Archivo Black',sans-serif;
+    font-size:26px;
+    line-height:1.2;
+    margin-bottom:8px;
+    text-shadow:0 2px 10px rgba(0,0,0,0.5);
+  }
+  .discover-place{
+    font-size:14.5px;
+    opacity:0.9;
+    margin-bottom:12px;
+  }
+  .discover-reason{
+    font-size:14px;
+    line-height:1.5;
+    opacity:0.95;
+    margin-bottom:16px;
+    max-width:92%;
+  }
+  .discover-reason::before{
+    content:"✨ Perché andarci — ";
+    font-weight:700;
+    color:var(--tape);
+  }
+  .discover-actions{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .discover-actions .remind-btn,
+  .discover-actions .share-btn{
+    background:rgba(255,255,255,0.14);
+    border-color:rgba(255,255,255,0.35);
+    color:#fff;
+    backdrop-filter:blur(4px);
+  }
+  .discover-actions .remind-btn.active{
+    background:var(--red);
+    border-color:var(--red);
+  }
+  .discover-source{
+    margin-left:auto;
+    color:#fff;
+    border-color:rgba(255,255,255,0.35);
+    background:rgba(255,255,255,0.14);
+  }
+  .discover-topbar{
+    position:absolute;
+    top:0; left:0; right:0;
+    z-index:2;
+    display:flex;
+    align-items:center;
+    padding:calc(14px + env(safe-area-inset-top,0px)) 16px 0;
+  }
+  .discover-progress{
+    color:#fff;
+    font-size:13px;
+    font-weight:600;
+    background:rgba(0,0,0,0.35);
+    padding:5px 11px;
+    border-radius:100px;
+  }
+  .discover-hint{
+    position:absolute;
+    bottom:18px;
+    left:50%;
+    transform:translateX(-50%);
+    color:#fff;
+    font-size:12.5px;
+    font-weight:600;
+    opacity:0.85;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:2px;
+    animation:bob 1.4s ease-in-out infinite;
+    pointer-events:none;
+  }
+  @keyframes bob{
+    0%,100%{ transform:translate(-50%,0); }
+    50%{ transform:translate(-50%,-6px); }
+  }
+  .discover-slide.is-live .discover-date-badge{
+    background:#fff;
+    color:var(--red);
+  }
+
   .install-banner button{
     background:var(--red);
     color:#fff;
@@ -534,7 +714,7 @@
 <script defer src="https://cloud.umami.is/script.js" data-website-id="ccaa6b2a-5f24-4c32-a88a-ac752c7201fb"></script>
 </head>
 <body>
-  <div class="wrap">
+  <div class="wrap" style="display:none">
     <header>
       <div class="logo"><img src="logo-wordmark.png" alt="Uni Events"></div>
       <div class="tagline">Quello che succede all'Unical, prima che finisca.</div>
@@ -571,6 +751,15 @@
       Aggiungilo alla schermata Home per aprirlo come un'app.
     </div>
     <button id="install-banner-action">Installa</button>
+  </div>
+
+  <button class="mode-switch" id="mode-switch-btn">📋 Lista</button>
+
+  <div class="discover-overlay" id="discover-overlay">
+    <div class="discover-topbar">
+      <div class="discover-progress" id="discover-progress">1 / 1</div>
+    </div>
+    <div class="discover-feed" id="discover-feed"></div>
   </div>
 
 <script>
@@ -913,6 +1102,172 @@
 
   document.getElementById('segnala-link').href = "https://forms.gle/357kSGUfBum8gNg58";
 
+  // ==================================================================
+  // MODALITÀ "SCOPRI" — feed a schermo intero stile TikTok, un evento
+  // alla volta. Ogni card mostra da sola: cos'è, quando è, perché
+  // vale la pena andarci. Si scorre verticalmente (swipe/scroll).
+  // ==================================================================
+  const DISCOVER_REASONS = [
+    "Un modo diverso per staccare dalla solita routine di lezioni.",
+    "Occasione buona per conoscere gente nuova nel campus.",
+    "Vale un salto, anche solo per curiosità: dura poco.",
+    "Di quegli eventi di cui poi si parla il giorno dopo.",
+    "Piccolo impegno, possibile bel ricordo da raccontare.",
+    "Un'ora diversa dal solito, giusto per cambiare aria.",
+  ];
+  function discoverReason(e) {
+    if (e.description) {
+      const plain = e.description.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      if (plain) return plain.length > 170 ? plain.slice(0, 167) + '…' : plain;
+    }
+    const sum = String(e.id).split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+    return DISCOVER_REASONS[sum % DISCOVER_REASONS.length];
+  }
+  function discoverDateLabel(e, now) {
+    const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startTarget = new Date(e.dateObj.getFullYear(), e.dateObj.getMonth(), e.dateObj.getDate());
+    const diffDays = Math.round((startTarget - startToday) / 86400000);
+    let d;
+    if (diffDays === 0) d = 'Oggi';
+    else if (diffDays === 1) d = 'Domani';
+    else if (diffDays === -1) d = 'Ieri';
+    else {
+      const wd = e.dateObj.toLocaleDateString('it-IT', { weekday: 'long' });
+      d = `${wd.charAt(0).toUpperCase()}${wd.slice(1)} ${e.dateObj.getDate()} ${monthLabel(e.dateObj).toLowerCase()}`;
+    }
+    const t = e.dateObj.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    return `${d} · ${t}`;
+  }
+
+  const discoverOverlay = document.getElementById('discover-overlay');
+  const discoverFeed = document.getElementById('discover-feed');
+  const discoverProgress = document.getElementById('discover-progress');
+  let discoverList = [];
+  let discoverObserver = null;
+
+  function buildDiscoverList() {
+    const now = new Date();
+    // Ordine: prima i futuri (dal più vicino), poi eventualmente i passati recenti in coda
+    const upcoming = events.filter(e => eventCutoff(e) >= now);
+    const recentPast = events
+      .filter(e => eventCutoff(e) < now)
+      .sort((a, b) => b.dateObj - a.dateObj)
+      .slice(0, 5);
+    return [...upcoming, ...recentPast];
+  }
+
+  function renderDiscoverSlide(e, now) {
+    const isReminded = !!localStorage.getItem('ue_reminded_' + e.id);
+    const live = isLive(e, now);
+    const hasSource = !!(e.link && e.link !== '#');
+    const slide = document.createElement('div');
+    slide.className = 'discover-slide' + (live ? ' is-live' : '');
+    slide.dataset.eventId = e.id;
+    slide.innerHTML = `
+      <div class="discover-slide-backdrop${e.image_url ? '' : ' no-image'}" ${e.image_url ? `style="background-image:url('${e.image_url}')"` : ''}></div>
+      ${e.image_url ? `<div class="discover-slide-poster"><img src="${e.image_url}" alt="Locandina evento" loading="lazy" onerror="this.parentElement.remove()"></div>` : ''}
+      <div class="discover-slide-gradient"></div>
+      <div class="discover-content">
+        <div class="discover-date-badge">${live ? '🔴 LIVE ORA · ' : ''}${discoverDateLabel(e, now)}</div>
+        <div class="discover-title">${e.title}</div>
+        <div class="discover-place">📍 ${e.place}</div>
+        <div class="discover-reason">${discoverReason(e)}</div>
+        <div class="discover-actions">
+          <button class="remind-btn${isReminded ? ' active' : ''}" data-event-id="${e.id}">${isReminded ? '🔔 Promemoria attivo' : '🔔 Ricordamelo'}</button>
+          <button class="share-btn" data-event-id="${e.id}" title="Condividi evento" aria-label="Condividi evento">${SHARE_ICON}</button>
+          ${hasSource ? `<a class="source-pill discover-source" href="${e.link}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation(); track('click_fonte_scopri', {evento: '${e.title.replace(/'/g, "\\'")}'})">🔗 Fonte</a>` : ''}
+        </div>
+      </div>
+    `;
+    const remindBtn = slide.querySelector('.remind-btn');
+    remindBtn.addEventListener('click', () => {
+      track(remindBtn.classList.contains('active') ? 'rimuovi_ricordamelo_scopri' : 'click_ricordamelo_scopri', { evento: e.title });
+      remindMe(e.id, remindBtn);
+    });
+    slide.querySelector('.share-btn').addEventListener('click', () => {
+      track('click_condividi_scopri', { evento: e.title });
+      shareEvent(e);
+    });
+    return slide;
+  }
+
+  function openDiscover(startId) {
+    discoverList = buildDiscoverList();
+    if (!discoverList.length) {
+      showToast('Nessun evento da scoprire al momento 🙁');
+      return;
+    }
+    track('apri_scopri', { totale: discoverList.length });
+    const now = new Date();
+    discoverFeed.innerHTML = '';
+    discoverList.forEach(e => discoverFeed.appendChild(renderDiscoverSlide(e, now)));
+
+    // Piccolo suggerimento "scorri" solo sulla primissima card, sparisce da solo
+    const firstSlide = discoverFeed.firstElementChild;
+    if (firstSlide && discoverList.length > 1) {
+      const hint = document.createElement('div');
+      hint.className = 'discover-hint';
+      hint.id = 'discover-hint';
+      hint.innerHTML = '⌃<br>Scorri per il prossimo';
+      firstSlide.appendChild(hint);
+    }
+
+    let startIndex = 0;
+    if (startId != null) {
+      const idx = discoverList.findIndex(e => String(e.id) === String(startId));
+      if (idx >= 0) startIndex = idx;
+    }
+    updateDiscoverProgress(startIndex + 1, discoverList.length);
+
+    if (discoverObserver) discoverObserver.disconnect();
+    discoverObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && entry.intersectionRatio > 0.6) {
+          const idx = discoverList.findIndex(e => String(e.id) === entry.target.dataset.eventId);
+          if (idx >= 0) updateDiscoverProgress(idx + 1, discoverList.length);
+          const hintEl = document.getElementById('discover-hint');
+          if (hintEl) hintEl.remove();
+        }
+      });
+    }, { root: discoverFeed, threshold: [0.6] });
+    Array.from(discoverFeed.children).forEach(slide => discoverObserver.observe(slide));
+
+    // Aspetta che il feed sia nel DOM e visibile prima di posizionare lo scroll
+    requestAnimationFrame(() => { discoverFeed.scrollTop = startIndex * discoverFeed.clientHeight; });
+  }
+
+  function updateDiscoverProgress(n, total) {
+    discoverProgress.textContent = `${n} / ${total}`;
+  }
+
+  let currentMode = 'feed';
+  const modeSwitchBtn = document.getElementById('mode-switch-btn');
+  const wrapEl = document.querySelector('.wrap');
+
+  function showFeed(startId) {
+    currentMode = 'feed';
+    wrapEl.style.display = 'none';
+    discoverOverlay.classList.add('visible');
+    document.body.style.overflow = 'hidden';
+    modeSwitchBtn.textContent = '📋 Lista';
+    openDiscover(startId);
+  }
+
+  function showList(tab) {
+    currentMode = 'list';
+    discoverOverlay.classList.remove('visible');
+    document.body.style.overflow = '';
+    wrapEl.style.display = '';
+    modeSwitchBtn.textContent = '🎬 Scopri';
+    if (discoverObserver) discoverObserver.disconnect();
+    if (inPastView) render('passati'); else render(tab || document.querySelector('.tab.active')?.dataset.tab || 'oggi');
+  }
+
+  modeSwitchBtn.addEventListener('click', () => {
+    track(currentMode === 'feed' ? 'passa_a_lista' : 'passa_a_scopri');
+    if (currentMode === 'feed') showList(); else showFeed();
+  });
+
   // In quale sezione si trova un dato evento (oggi / settimana / mese / passati)?
   function findTabForEvent(eventId, buckets) {
     const id = String(eventId);
@@ -978,8 +1333,9 @@
       .map(e => ({ ...e, dateObj: new Date(e.date), endDateObj: e.end ? new Date(e.end) : null }))
       .sort((a, b) => a.dateObj - b.dateObj);
 
+    render('oggi'); // prepara la lista in background, così è pronta quando si passa a "Lista"
     const handledShare = handleSharedEvent();
-    if (!handledShare) render('oggi');
+    if (!handledShare) showFeed(); else showList();
 
     // Se l'utente aveva già attivato le notifiche in passato, rinnova
     // silenziosamente l'iscrizione ogni volta che apre l'app, così resta
