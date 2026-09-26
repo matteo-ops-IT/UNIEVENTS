@@ -236,6 +236,10 @@
     color:var(--red);
     font-weight:600;
   }
+  .meta-time{
+    color:var(--red);
+    font-weight:700;
+  }
   .card-title-row{
     display:flex;
     align-items:flex-start;
@@ -250,7 +254,6 @@
   }
   .card-chevron{
     flex-shrink:0;
-    margin-top:2px;
     color:var(--muted);
     transition:transform 0.3s ease;
   }
@@ -260,11 +263,6 @@
   .card-place{
     font-size:14px;
     color:var(--muted);
-  }
-  .card-hint{
-    font-size:13px;
-    color:var(--red);
-    font-weight:600;
   }
   .card-top-row{
     display:flex;
@@ -705,9 +703,9 @@
     const startT = e.dateObj.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
     if (e.endDateObj) {
       const endT = e.endDateObj.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-      return `${s} · ${startT}–${endT}`;
+      return `${s} · <span class="meta-time">${startT}–${endT}</span>`;
     }
-    return `${s} · ${startT}`;
+    return `${s} · <span class="meta-time">${startT}</span>`;
   }
 
   // Orario oltre il quale l'evento è considerato concluso:
@@ -822,11 +820,10 @@
         </div>
         <div class="card-title-row">
           <div class="card-title">${e.title}</div>
-          ${hasDetails ? `<svg class="card-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>` : ''}
         </div>
         <div class="card-place">📍 ${e.place}</div>
         <div class="card-action-row">
-          ${hasDetails ? `<div class="card-hint">Clicca per maggiori info</div>` : `<div></div>`}
+          ${hasDetails ? `<svg class="card-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>` : `<div></div>`}
           <div class="card-action-buttons">
             <button class="share-btn" data-event-id="${e.id}" title="Condividi evento" aria-label="Condividi evento">${SHARE_ICON}</button>
             ${canRemind ? `<button class="remind-btn${isReminded ? ' active' : ''}" data-event-id="${e.id}">${isReminded ? '🔔 Promemoria attivo' : '🔔 Ricordamelo'}</button>` : ''}
