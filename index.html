@@ -1330,8 +1330,20 @@
   // Bottone di condivisione su ogni card: usa la Web Share API nativa
   // (menu "condividi" del telefono) con fallback su copia negli appunti
   // per i browser/desktop che non la supportano.
+  // Versione "solo testo" della data/ora, senza tag HTML, per condivisioni
+  // (usa – invece di - così WhatsApp non la scambia per un numero di telefono)
+  function formatDatePlain(e) {
+    const s = e.dateObj.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' });
+    const startT = e.dateObj.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    if (e.endDateObj) {
+      const endT = e.endDateObj.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+      return `${s} · ${startT}–${endT}`;
+    }
+    return `${s} · ${startT}`;
+  }
+
   async function shareEvent(e) {
-    const text = `📅 ${e.title}\n📍 ${e.place}\n🗓️ ${formatDate(e)}\n\nScopri di più su Uni Events:`;
+    const text = `📅 ${e.title}\n📍 ${e.place}\n🗓️ ${formatDatePlain(e)}\n\nScopri di più su Uni Events:`;
     // Link al nostro sito con l'id dell'evento: aprendolo, l'app va
     // automaticamente alla sezione giusta e mette in evidenza la card
     const url = `${window.location.origin}${window.location.pathname}?event=${encodeURIComponent(e.id)}`;
