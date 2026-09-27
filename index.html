@@ -149,26 +149,33 @@
   }
 
   .feed-poster-wrap{
-    flex-shrink:0;
-    height:24vh;
-    min-height:130px;
-    max-height:210px;
+    flex:1;
+    min-height:0;
+    height:62vh;
     display:flex;
     align-items:center;
     justify-content:center;
-    margin-bottom:16px;
+    margin-bottom:14px;
+    cursor:pointer;
+    transition:height 0.35s ease;
+  }
+  .feed-slide.expanded .feed-poster-wrap{
+    flex:none;
+    height:22vh;
   }
   .feed-poster{
-    max-width:60%;
+    max-width:90%;
     max-height:100%;
     object-fit:contain;
     background:#fff;
     border:1px solid var(--line);
     box-shadow:0 4px 14px rgba(0,0,0,0.10);
     border-radius:2px;
+    transition:max-width 0.35s ease;
   }
+  .feed-slide.expanded .feed-poster{ max-width:60%; }
   .feed-poster-empty{
-    width:60%;
+    width:90%;
     height:100%;
     border:1px dashed var(--line);
     border-radius:3px;
@@ -179,12 +186,13 @@
     text-align:center;
     color:var(--muted);
     font-family:'Archivo Black',sans-serif;
-    font-size:14px;
+    font-size:16px;
     line-height:1.4;
-    padding:14px;
+    padding:20px;
   }
 
-  .feed-info{ flex:1; min-height:0; display:flex; flex-direction:column; }
+  .feed-info{ flex-shrink:0; display:flex; flex-direction:column; min-height:0; }
+  .feed-slide.expanded .feed-info{ flex:1; }
   .feed-title{
     font-family:'Archivo Black',sans-serif;
     font-size:22px;
@@ -192,15 +200,28 @@
     margin-bottom:6px;
     flex-shrink:0;
   }
-  .feed-place{ font-size:14px; color:var(--muted); margin-bottom:14px; flex-shrink:0; }
+  .feed-place{ font-size:14px; color:var(--muted); margin-bottom:4px; flex-shrink:0; }
+  .feed-tap-hint{
+    font-size:12.5px;
+    color:var(--muted);
+    font-weight:600;
+    margin-bottom:10px;
+    flex-shrink:0;
+  }
+  .feed-slide.expanded .feed-tap-hint{ display:none; }
+  .feed-reason-wrap{
+    display:grid;
+    grid-template-rows:0fr;
+    transition:grid-template-rows 0.35s ease;
+  }
+  .feed-slide.expanded .feed-reason-wrap{ grid-template-rows:1fr; margin-bottom:12px; }
+  .feed-reason-inner{ overflow:hidden; min-height:0; }
   .feed-reason{
-    flex:1;
-    min-height:0;
+    max-height:34vh;
     overflow-y:auto;
     -webkit-overflow-scrolling:touch;
-    font-size:15.5px;
-    line-height:1.68;
-    margin-bottom:14px;
+    font-size:15px;
+    line-height:1.65;
     padding-right:2px;
   }
   .feed-reason b{
@@ -212,6 +233,7 @@
     margin-bottom:6px;
   }
   .feed-actions{ flex-shrink:0; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+
 
   .remind-btn{
     background:var(--paper);
@@ -563,13 +585,23 @@
       <div class="feed-info">
         <div class="feed-title">${e.title}</div>
         <div class="feed-place">📍 ${e.place}${subsHtml}</div>
-        <div class="feed-reason"><b>Perché andarci</b> — ${feedReason(e)}</div>
+        <div class="feed-tap-hint">👆 Tocca la locandina per la descrizione</div>
+        <div class="feed-reason-wrap"><div class="feed-reason-inner">
+          <div class="feed-reason"><b>Perché andarci</b> — ${feedReason(e)}</div>
+        </div></div>
         <div class="feed-actions">
           <button class="remind-btn${isReminded ? ' active' : ''}" data-event-id="${e.id}">${isReminded ? '🔔 Promemoria attivo' : '🔔 Ricordamelo'}</button>
           <button class="share-btn" data-event-id="${e.id}" title="Condividi evento" aria-label="Condividi evento">${SHARE_ICON}</button>
         </div>
       </div>
     `;
+
+    slide.addEventListener('click', (evt) => {
+      if (evt.target.closest('button, a')) return;
+      const opening = !slide.classList.contains('expanded');
+      slide.classList.toggle('expanded');
+      if (opening) track('apri_descrizione', { evento: e.title });
+    });
 
     slide.querySelector('.remind-btn').addEventListener('click', () => {
       const btn = slide.querySelector('.remind-btn');
