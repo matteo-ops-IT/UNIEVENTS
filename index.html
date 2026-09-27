@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Uni Events</title>
 <meta name="description" content="Quello che succede all'Unical, prima che finisca. Tutti gli eventi del campus in un unico posto.">
 
@@ -14,7 +14,7 @@
 <meta property="og:url" content="https://TUO-DOMINIO/">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1B1B1D">
+<meta name="theme-color" content="#F7F5F1">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -33,417 +33,279 @@
     --tape:#EFE6C8;
   }
   *{box-sizing:border-box;}
+  html,body{height:100%;}
   body{
     margin:0;
     background:var(--paper);
     color:var(--ink);
     font-family:'Inter',sans-serif;
     -webkit-font-smoothing:antialiased;
+    overscroll-behavior-y:none;
   }
-  .wrap{
-    max-width:560px;
-    margin:0 auto;
-    padding:28px 20px 60px;
+
+  /* ===== Logo discreto, sempre in alto a sinistra ===== */
+  .brand-logo{
+    position:fixed;
+    top:calc(12px + env(safe-area-inset-top,0px));
+    left:16px;
+    z-index:150;
+    opacity:0.92;
   }
-  header{
-    margin-bottom:22px;
-  }
-  .logo{
-    font-family:'Archivo Black',sans-serif;
-    font-size:30px;
-    line-height:1;
-    letter-spacing:-0.01em;
-  }
-  .logo img{
+  .brand-logo img{
     display:block;
-    height:34px;
+    height:19px;
     width:auto;
   }
-  .logo span{color:var(--red);}
-  .tagline{
-    margin-top:8px;
-    color:var(--muted);
-    font-size:15px;
-  }
 
-  .tabs{
-    display:flex;
-    gap:22px;
-    border-bottom:1px solid var(--line);
-    margin-bottom:14px;
-  }
-  .tab{
-    background:none;
-    border:none;
-    font-family:'Inter',sans-serif;
-    font-size:15px;
-    font-weight:600;
-    color:var(--muted);
-    padding:0 0 12px;
-    cursor:pointer;
-    border-bottom:2px solid transparent;
-    margin-bottom:-1px;
-  }
-  .tab.active{
-    color:var(--ink);
-    border-bottom-color:var(--red);
-  }
-
-  /* Bottone separato, non un tab: apre/chiude la sezione degli eventi passati */
-  .past-row{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:10px;
-    margin-bottom:20px;
-  }
-  .notif-btn{
-    background:none;
+  /* ===== Menu ☰ in alto a destra ===== */
+  .menu-btn{
+    position:fixed;
+    top:calc(10px + env(safe-area-inset-top,0px));
+    right:14px;
+    z-index:150;
+    background:rgba(247,245,241,0.85);
+    backdrop-filter:blur(6px);
     border:1px solid var(--line);
     color:var(--ink);
-    font-family:'Inter',sans-serif;
-    font-size:13px;
-    font-weight:600;
-    padding:7px 14px;
+    width:36px;
+    height:36px;
     border-radius:100px;
+    font-size:16px;
     cursor:pointer;
   }
-  .notif-btn.active{
-    background:var(--red);
-    border-color:var(--red);
-    color:#fff;
-  }
-  .past-btn{
-    background:none;
-    border:1px solid var(--line);
-    color:var(--muted);
-    font-family:'Inter',sans-serif;
-    font-size:13px;
-    font-weight:600;
-    padding:7px 14px;
-    border-radius:100px;
-    cursor:pointer;
-  }
-  .past-btn:hover{
-    border-color:var(--muted);
-    color:var(--ink);
-  }
-  .past-btn.active-past{
-    background:var(--ink);
-    border-color:var(--ink);
-    color:var(--paper);
-  }
-
-  .list{
-    display:flex;
-    flex-direction:column;
-    gap:18px;
-  }
-
-  .day-separator{
-    font-family:'Archivo Black',sans-serif;
-    font-size:15px;
-    color:var(--ink);
-    margin:6px 2px -6px;
-  }
-  .month-separator{
-    font-family:'Archivo Black',sans-serif;
-    font-size:19px;
-    color:var(--red);
-    margin:14px 2px -6px;
-    padding-top:10px;
-    border-top:1px solid var(--line);
-  }
-  .list > .month-separator:first-child{
-    border-top:none;
-    padding-top:0;
-    margin-top:0;
-  }
-
-  .card{
-    position:relative;
+  .menu-panel{
+    position:fixed;
+    top:calc(52px + env(safe-area-inset-top,0px));
+    right:14px;
+    z-index:150;
     background:#fff;
     border:1px solid var(--line);
-    border-radius:3px;
-    padding:18px 18px 16px;
-    box-shadow:0 1px 0 rgba(0,0,0,0.03);
-    cursor:pointer;
+    border-radius:10px;
+    box-shadow:0 12px 30px rgba(0,0,0,0.16);
+    padding:6px;
+    min-width:220px;
+    display:none;
+    flex-direction:column;
   }
-  .card::before{
+  .menu-panel.open{ display:flex; }
+  .menu-panel button, .menu-panel a{
+    background:none;
+    border:none;
+    text-align:left;
+    font-family:'Inter',sans-serif;
+    font-size:14.5px;
+    font-weight:600;
+    color:var(--ink);
+    padding:11px 12px;
+    border-radius:6px;
+    cursor:pointer;
+    text-decoration:none;
+    display:block;
+  }
+  .menu-panel button:hover, .menu-panel a:hover{ background:var(--paper); }
+  .menu-panel button.active{ color:var(--red); }
+  .menu-sep{ height:1px; background:var(--line); margin:5px 8px; }
+
+  /* ===== Il feed: uno schermo intero per evento, si scorre e basta ===== */
+  .feed{
+    height:100vh;
+    height:100dvh;
+    overflow-y:auto;
+    scroll-snap-type:y mandatory;
+    scroll-behavior:smooth;
+  }
+  .feed-slide{
+    min-height:100vh;
+    min-height:100dvh;
+    scroll-snap-align:start;
+    scroll-snap-stop:always;
+    display:flex;
+    flex-direction:column;
+    padding:0 18px calc(16px + env(safe-area-inset-bottom,0px));
+  }
+  .feed-meta-row{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:8px;
+    flex-wrap:wrap;
+    padding-top:calc(48px + env(safe-area-inset-top,0px));
+    padding-bottom:10px;
+  }
+  .feed-badge{
+    margin-right:auto;
+    background:var(--red);
+    color:#fff;
+    font-weight:700;
+    font-size:13px;
+    padding:6px 12px;
+    border-radius:100px;
+    white-space:nowrap;
+  }
+  .feed-slide.is-live .feed-badge{
+    background:#fff;
+    color:var(--red);
+    border:1.5px solid var(--red);
+  }
+
+  .feed-poster-wrap{
+    flex:1;
+    min-height:0;
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:4px 0;
+  }
+  .feed-poster-wrap::before{
     content:"";
     position:absolute;
-    top:-8px;
-    left:22px;
-    width:34px;
+    top:0;
+    left:50%;
+    transform:translateX(-50%) rotate(-3deg);
+    width:40px;
     height:16px;
     background:var(--tape);
     opacity:0.9;
-    transform:rotate(-3deg);
+    z-index:2;
   }
-  .card.next{
-    border-color:var(--red);
-  }
-  .card.next::before{
-    background:var(--red);
-    opacity:0.85;
-  }
-  .card.past{
-    opacity:0.55;
-  }
-  .card.past::before{
-    background:var(--line);
-  }
-  .card.live{
-    border-color:var(--red);
-    animation: pulse-border 1.6s ease-in-out infinite;
-  }
-  @keyframes pulse-border{
-    0%,100%{ box-shadow:0 0 0 0 rgba(214,39,43,0.35); }
-    50%{ box-shadow:0 0 0 6px rgba(214,39,43,0); }
-  }
-  .card.elapsed{
-    opacity:0.55;
-  }
-  /* Evidenziazione temporanea della card raggiunta da un link condiviso */
-  .card.shared-highlight{
-    animation: pulse-shared 1.1s ease-in-out 2;
-  }
-  @keyframes pulse-shared{
-    0%{ box-shadow:0 0 0 0 rgba(214,39,43,0.45); border-color:var(--red); }
-    60%{ box-shadow:0 0 0 10px rgba(214,39,43,0); border-color:var(--red); }
-    100%{ box-shadow:0 0 0 0 rgba(214,39,43,0); }
-  }
-  .card-live-banner{
-    background:var(--red);
-    color:#fff;
-    font-size:13px;
-    font-weight:600;
-    padding:6px 10px;
-    border-radius:4px;
-    margin-bottom:8px;
-    display:inline-block;
-  }
-  .card:nth-child(3n+1){ transform:rotate(-0.6deg); }
-  .card:nth-child(3n+2){ transform:rotate(0.5deg); }
-  .card:nth-child(3n)  { transform:rotate(-0.2deg); }
-
-  .card-meta{
-    font-size:13px;
-    color:var(--muted);
-    margin-bottom:6px;
-  }
-  .card.next .card-meta{
-    color:var(--red);
-    font-weight:600;
-  }
-  .meta-time{
-    color:var(--red);
-    font-weight:700;
-  }
-  .card-title-row{
-    display:flex;
-    align-items:flex-start;
-    justify-content:space-between;
-    gap:10px;
-  }
-  .card-title{
-    font-size:18px;
-    font-weight:700;
-    line-height:1.3;
-    margin-bottom:8px;
-  }
-  .card-chevron{
-    flex-shrink:0;
-    color:var(--muted);
-    transition:transform 0.3s ease;
-  }
-  .card.expanded .card-chevron{
-    transform:rotate(180deg);
-  }
-  .card-place{
-    font-size:14px;
-    color:var(--muted);
-  }
-  .card-top-row{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:8px;
-    flex-wrap:wrap;
-  }
-  .source-pill{
-    flex-shrink:0;
-    display:inline-flex;
-    align-items:center;
-    gap:4px;
-    font-size:12px;
-    font-weight:600;
-    color:var(--muted);
-    text-decoration:none;
+  .feed-slide:nth-child(3n+2) .feed-poster-wrap::before{ transform:translateX(-50%) rotate(2deg); }
+  .feed-slide:nth-child(3n) .feed-poster-wrap::before{ transform:translateX(-50%) rotate(-1deg); }
+  .feed-poster{
+    max-width:100%;
+    max-height:100%;
+    object-fit:contain;
+    background:#fff;
     border:1px solid var(--line);
-    border-radius:100px;
-    padding:4px 11px;
-    white-space:nowrap;
-  }
-  .source-pill:hover{
-    border-color:var(--muted);
-    color:var(--ink);
-  }
-
-  .card-action-row{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:10px;
-    margin-top:10px;
-  }
-  .card-action-buttons{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    flex-shrink:0;
-    margin-left:auto;
-  }
-
-  /* Pannello dettagli: animato con la tecnica "grid-template-rows"
-     per un'apertura/chiusura fluida senza dover calcolare altezze in JS */
-  .card-details{
-    display:grid;
-    grid-template-rows:0fr;
-    transition:grid-template-rows 0.35s ease;
-  }
-  .card.expanded .card-details{
-    grid-template-rows:1fr;
-    margin-top:12px;
-  }
-  .card-details-inner{
-    overflow:hidden;
-  }
-  .card-image{
-    width:100%;
-    max-height:220px;
-    object-fit:cover;
+    box-shadow:0 8px 22px rgba(0,0,0,0.12);
     border-radius:2px;
-    margin-bottom:12px;
-    display:block;
   }
-  .card-description{
-    font-size:14.5px;
-    line-height:1.55;
-    color:var(--ink);
-  }
-  .sub-events{
-    margin-top:14px;
-    border-top:1px dashed var(--line);
-    padding-top:12px;
-  }
-  .sub-events-title{
-    font-family:'Archivo Black',sans-serif;
-    font-size:13px;
-    margin-bottom:8px;
-  }
-  .sub-item{
+  .feed-slide:nth-child(3n+1) .feed-poster{ transform:rotate(-1deg); }
+  .feed-slide:nth-child(3n+2) .feed-poster{ transform:rotate(0.8deg); }
+  .feed-poster-empty{
+    width:100%;
+    height:100%;
+    border:1px dashed var(--line);
+    border-radius:3px;
+    background:#fff;
     display:flex;
-    gap:12px;
-    padding:8px 0;
-    border-bottom:1px solid var(--line);
-  }
-  .sub-item:last-child{ border-bottom:none; }
-  .sub-time{
-    flex-shrink:0;
-    min-width:44px;
-    font-size:13px;
-    font-weight:700;
-    color:var(--red);
-  }
-  .sub-name{
-    font-size:14.5px;
-    font-weight:600;
-    line-height:1.35;
-  }
-  .sub-place{
-    font-size:13px;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
     color:var(--muted);
-    margin-top:2px;
+    font-family:'Archivo Black',sans-serif;
+    font-size:15px;
+    line-height:1.4;
+    padding:24px;
   }
-  .sub-desc{
-    font-size:13.5px;
-    line-height:1.45;
-    margin-top:4px;
+
+  .feed-info{ flex-shrink:0; padding-top:14px; }
+  .feed-title{
+    font-family:'Archivo Black',sans-serif;
+    font-size:21px;
+    line-height:1.25;
+    margin-bottom:5px;
   }
+  .feed-place{ font-size:14px; color:var(--muted); margin-bottom:9px; }
+  .feed-reason{ font-size:13.5px; line-height:1.5; margin-bottom:13px; }
+  .feed-reason b{ color:var(--red); }
+  .feed-actions{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+
   .remind-btn{
-    flex-shrink:0;
     background:var(--paper);
     border:1px solid var(--line);
     color:var(--ink);
     font-family:'Inter',sans-serif;
     font-size:13px;
     font-weight:600;
-    padding:8px 14px;
+    padding:9px 14px;
     border-radius:6px;
     cursor:pointer;
     white-space:nowrap;
   }
-  .remind-btn.active{
-    background:var(--red);
-    border-color:var(--red);
-    color:#fff;
-  }
+  .remind-btn.active{ background:var(--red); border-color:var(--red); color:#fff; }
   .share-btn{
-    flex-shrink:0;
     background:var(--paper);
     border:1px solid var(--line);
     color:var(--ink);
-    padding:8px;
-    width:34px;
-    height:34px;
+    padding:9px;
+    width:36px;
+    height:36px;
     border-radius:6px;
     cursor:pointer;
     display:flex;
     align-items:center;
     justify-content:center;
   }
-  .share-btn:hover{
-    border-color:var(--muted);
-  }
-  .share-btn svg{
-    width:16px;
-    height:16px;
-    display:block;
-  }
-
-  .empty{
-    padding:30px 18px;
-    text-align:center;
-    border:1px dashed var(--line);
-    border-radius:3px;
-    color:var(--muted);
-    font-size:15px;
-    line-height:1.5;
-  }
-  .empty button{
-    margin-top:12px;
-    background:none;
-    border:none;
-    color:var(--red);
+  .share-btn svg{ width:16px; height:16px; display:block; }
+  .source-pill{
+    margin-left:auto;
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    font-size:12.5px;
     font-weight:600;
-    font-size:15px;
-    cursor:pointer;
-    text-decoration:underline;
+    color:var(--muted);
+    text-decoration:none;
+    border:1px solid var(--line);
+    border-radius:100px;
+    padding:8px 13px;
+    white-space:nowrap;
+  }
+  .source-pill:hover{ border-color:var(--muted); color:var(--ink); }
+
+  .feed-hint{
+    position:absolute;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
+    color:var(--muted);
+    font-size:12px;
+    font-weight:600;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:2px;
+    animation:bob 1.4s ease-in-out infinite;
+    pointer-events:none;
+  }
+  @keyframes bob{
+    0%,100%{ transform:translate(-50%,0); }
+    50%{ transform:translate(-50%,-6px); }
   }
 
-  .cta{
-    margin-top:32px;
+  .feed-slide.shared-highlight .feed-poster,
+  .feed-slide.shared-highlight .feed-poster-empty{
+    animation: pulse-shared 1.1s ease-in-out 2;
+  }
+  @keyframes pulse-shared{
+    0%{ box-shadow:0 0 0 0 rgba(214,39,43,0.45); }
+    60%{ box-shadow:0 0 0 12px rgba(214,39,43,0); }
+    100%{ box-shadow:0 0 0 0 rgba(214,39,43,0); }
+  }
+
+  /* ===== Ultima card: chiusura del feed con CTA e nota ===== */
+  .feed-end{
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    gap:14px;
+    padding-top:calc(48px + env(safe-area-inset-top,0px));
+  }
+  .feed-end .end-title{
+    font-family:'Archivo Black',sans-serif;
+    font-size:22px;
+    max-width:280px;
+  }
+  .feed-end .cta{
     padding:20px;
     background:var(--ink);
     color:var(--paper);
     border-radius:3px;
+    max-width:320px;
   }
-  .cta p{
-    margin:0 0 12px;
-    font-size:15px;
-  }
-  .cta a{
+  .feed-end .cta p{ margin:0 0 12px; font-size:15px; }
+  .feed-end .cta a{
     display:inline-block;
     background:var(--red);
     color:#fff;
@@ -453,21 +315,18 @@
     padding:10px 16px;
     border-radius:3px;
   }
-
-  footer{
-    margin-top:30px;
+  .feed-end footer{
     font-size:12.5px;
     color:var(--muted);
     line-height:1.5;
-    border-top:1px solid var(--line);
-    padding-top:16px;
+    max-width:300px;
   }
 
   .toast{
     position:fixed;
     left:16px;
     right:16px;
-    top:16px;
+    top:calc(16px + env(safe-area-inset-top,0px));
     max-width:528px;
     margin:0 auto;
     background:var(--ink);
@@ -484,18 +343,13 @@
     transition:opacity 0.25s ease, transform 0.25s ease;
     z-index:200;
   }
-  .toast.visible{
-    opacity:1;
-    transform:translateY(0);
-  }
+  .toast.visible{ opacity:1; transform:translateY(0); }
 
   .install-banner{
     position:fixed;
     left:0;
     right:0;
     bottom:0;
-    max-width:none;
-    margin:0;
     background:var(--ink);
     color:var(--paper);
     padding:20px 20px calc(22px + env(safe-area-inset-bottom, 0px));
@@ -503,202 +357,12 @@
     display:none;
     align-items:center;
     gap:14px;
-    z-index:100;
+    z-index:160;
     border-top:3px solid var(--red);
   }
-  .install-banner.visible{
-    display:flex;
-  }
-  .install-banner-text{
-    flex:1;
-    font-size:15px;
-    line-height:1.5;
-  }
-  .install-banner-text strong{
-    display:block;
-    font-size:17px;
-    margin-bottom:3px;
-  }
-  /* ============ MODALITÀ "SCOPRI" (stile TikTok) ============ */
-  .mode-switch{
-    position:fixed;
-    top:calc(14px + env(safe-area-inset-top,0px));
-    right:16px;
-    z-index:400;
-    background:rgba(0,0,0,0.45);
-    backdrop-filter:blur(6px);
-    color:#fff;
-    border:1px solid rgba(255,255,255,0.35);
-    font-family:'Inter',sans-serif;
-    font-weight:700;
-    font-size:13px;
-    padding:9px 14px;
-    border-radius:100px;
-    cursor:pointer;
-    display:flex;
-    align-items:center;
-    gap:6px;
-  }
-  .discover-overlay{
-    position:fixed;
-    inset:0;
-    background:#000;
-    z-index:300;
-    display:none;
-    flex-direction:column;
-  }
-  .discover-overlay.visible{ display:flex; }
-  .discover-feed{
-    flex:1;
-    overflow-y:auto;
-    scroll-snap-type:y mandatory;
-    scroll-behavior:smooth;
-  }
-  .discover-slide{
-    position:relative;
-    height:100%;
-    height:100dvh;
-    scroll-snap-align:start;
-    scroll-snap-stop:always;
-    display:flex;
-    flex-direction:column;
-    justify-content:flex-end;
-    overflow:hidden;
-    color:#fff;
-  }
-  .discover-slide-backdrop{
-    position:absolute;
-    inset:-20px;
-    background-size:cover;
-    background-position:center;
-    filter:blur(22px) brightness(0.55);
-    transform:scale(1.15);
-  }
-  .discover-slide-backdrop.no-image{
-    background:linear-gradient(155deg,#3a1113,#1B1B1D 70%);
-    filter:none;
-    transform:none;
-  }
-  .discover-slide-poster{
-    position:absolute;
-    inset:0;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:0 0 26vh;
-  }
-  .discover-slide-poster img{
-    max-width:100%;
-    max-height:100%;
-    object-fit:contain;
-    display:block;
-  }
-  .discover-slide-gradient{
-    position:absolute;
-    inset:0;
-    background:linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.15) 40%, rgba(0,0,0,0.92) 100%);
-  }
-  .discover-content{
-    position:relative;
-    padding:18px 20px calc(26px + env(safe-area-inset-bottom,0px));
-  }
-  .discover-date-badge{
-    display:inline-block;
-    background:var(--red);
-    color:#fff;
-    font-weight:700;
-    font-size:13.5px;
-    padding:6px 12px;
-    border-radius:100px;
-    margin-bottom:12px;
-  }
-  .discover-title{
-    font-family:'Archivo Black',sans-serif;
-    font-size:26px;
-    line-height:1.2;
-    margin-bottom:8px;
-    text-shadow:0 2px 10px rgba(0,0,0,0.5);
-  }
-  .discover-place{
-    font-size:14.5px;
-    opacity:0.9;
-    margin-bottom:12px;
-  }
-  .discover-reason{
-    font-size:14px;
-    line-height:1.5;
-    opacity:0.95;
-    margin-bottom:16px;
-    max-width:92%;
-  }
-  .discover-reason::before{
-    content:"✨ Perché andarci — ";
-    font-weight:700;
-    color:var(--tape);
-  }
-  .discover-actions{
-    display:flex;
-    align-items:center;
-    gap:10px;
-  }
-  .discover-actions .remind-btn,
-  .discover-actions .share-btn{
-    background:rgba(255,255,255,0.14);
-    border-color:rgba(255,255,255,0.35);
-    color:#fff;
-    backdrop-filter:blur(4px);
-  }
-  .discover-actions .remind-btn.active{
-    background:var(--red);
-    border-color:var(--red);
-  }
-  .discover-source{
-    margin-left:auto;
-    color:#fff;
-    border-color:rgba(255,255,255,0.35);
-    background:rgba(255,255,255,0.14);
-  }
-  .discover-topbar{
-    position:absolute;
-    top:0; left:0; right:0;
-    z-index:2;
-    display:flex;
-    align-items:center;
-    padding:calc(14px + env(safe-area-inset-top,0px)) 16px 0;
-  }
-  .discover-progress{
-    color:#fff;
-    font-size:13px;
-    font-weight:600;
-    background:rgba(0,0,0,0.35);
-    padding:5px 11px;
-    border-radius:100px;
-  }
-  .discover-hint{
-    position:absolute;
-    bottom:18px;
-    left:50%;
-    transform:translateX(-50%);
-    color:#fff;
-    font-size:12.5px;
-    font-weight:600;
-    opacity:0.85;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:2px;
-    animation:bob 1.4s ease-in-out infinite;
-    pointer-events:none;
-  }
-  @keyframes bob{
-    0%,100%{ transform:translate(-50%,0); }
-    50%{ transform:translate(-50%,-6px); }
-  }
-  .discover-slide.is-live .discover-date-badge{
-    background:#fff;
-    color:var(--red);
-  }
-
+  .install-banner.visible{ display:flex; }
+  .install-banner-text{ flex:1; font-size:15px; line-height:1.5; }
+  .install-banner-text strong{ display:block; font-size:17px; margin-bottom:3px; }
   .install-banner button{
     background:var(--red);
     color:#fff;
@@ -714,34 +378,20 @@
 <script defer src="https://cloud.umami.is/script.js" data-website-id="ccaa6b2a-5f24-4c32-a88a-ac752c7201fb"></script>
 </head>
 <body>
-  <div class="wrap" style="display:none">
-    <header>
-      <div class="logo"><img src="logo-wordmark.png" alt="Uni Events"></div>
-      <div class="tagline">Quello che succede all'Unical, prima che finisca.</div>
-    </header>
 
-    <nav class="tabs" id="tabs">
-      <button class="tab active" data-tab="oggi">Oggi</button>
-      <button class="tab" data-tab="settimana">Questa settimana</button>
-      <button class="tab" data-tab="mese">Prossimamente</button>
-    </nav>
+  <div class="brand-logo"><img src="logo-wordmark.png" alt="Uni Events"></div>
 
-    <div class="past-row">
-      <button class="notif-btn" id="notif-btn">🔔 Avvisami!</button>
-      <button class="past-btn" id="past-btn">Cosa mi sono perso</button>
-    </div>
-
-    <div class="list" id="list"></div>
-
-    <div class="cta">
-      <p>Conosci un evento che manca?</p>
-      <a href="#" id="segnala-link">Segnalalo in 30 secondi</a>
-    </div>
-
-    <footer>
-      Uni Events è un progetto studentesco indipendente, non affiliato ufficialmente all'Ateneo. Le fonti degli eventi sono sempre linkate.
-    </footer>
+  <button class="menu-btn" id="menu-btn" aria-label="Menu">☰</button>
+  <div class="menu-panel" id="menu-panel">
+    <button id="menu-notif">🔔 Avvisami!</button>
+    <div class="menu-sep"></div>
+    <button id="menu-today">📅 Vai a oggi</button>
+    <button id="menu-past">🕰️ Cosa mi sono perso</button>
+    <div class="menu-sep"></div>
+    <a id="menu-segnala" href="#" target="_blank" rel="noopener noreferrer">📝 Segnala un evento</a>
   </div>
+
+  <div class="feed" id="feed"></div>
 
   <div class="toast" id="toast"></div>
 
@@ -753,30 +403,14 @@
     <button id="install-banner-action">Installa</button>
   </div>
 
-  <button class="mode-switch" id="mode-switch-btn">📋 Lista</button>
-
-  <div class="discover-overlay" id="discover-overlay">
-    <div class="discover-topbar">
-      <div class="discover-progress" id="discover-progress">1 / 1</div>
-    </div>
-    <div class="discover-feed" id="discover-feed"></div>
-  </div>
-
 <script>
   // ==================================================================
   // CONFIGURAZIONE SUPABASE
-  // Sostituisci questi due valori con quelli del tuo progetto Supabase:
-  // Project Settings → API → Project URL / anon public key
   // ==================================================================
   const SUPABASE_URL = "https://ttnwhqpvwkihszxpbdbe.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_W4TDBUcZsTSKPe6fdt0HhQ_6t8KyjXO";
-
-  // Chiave pubblica per le notifiche push (VAPID). Non è un segreto:
-  // è fatta apposta per stare nel codice del sito.
   const VAPID_PUBLIC_KEY = "BBgvdvS4RK60mNFi0zBvwxfTSAVUOX9tm-4rSxHzBXuMrrnSRYhGbQFwS3Po4KJeVfyco2gO_Lp5opW95S2N7sQ";
 
-  // Eventi di riserva, usati SOLO se il fetch a Supabase fallisce
-  // (es. mentre stai ancora configurando il database).
   const fallbackEvents = [
     { title: "Punto Informazioni Matricole", place: "Piazzale delle Aule", date: "2026-09-08T09:00:00", link: "#" },
     { title: "Passeggiata delle Matricole", place: "Campus di Arcavacata", date: "2026-09-11T10:00:00", link: "#" },
@@ -785,15 +419,11 @@
 
   let events = [];
 
-  // Manda un evento a Umami, se è caricato (se lo script fosse bloccato
-  // da un ad-blocker, non deve rompere il resto del sito)
   function track(name, data) {
     try { window.umami && window.umami.track(name, data); } catch (err) {}
   }
 
-  // Legge la colonna sub_events. Formato semplice: una riga per appuntamento,
-  //   Titolo | Luogo | 20:30 | Descrizione
-  // (accetta anche il vecchio formato JSON, se presente)
+  // sub_events: una riga per appuntamento, "Titolo | Luogo | 20:30 | Descrizione"
   function parseSubEvents(raw) {
     if (!raw) return [];
     if (Array.isArray(raw)) return raw;
@@ -815,12 +445,7 @@
     try {
       const res = await fetch(
         `${SUPABASE_URL}/rest/v1/events?select=*&order=event_date.asc`,
-        {
-          headers: {
-            apikey: SUPABASE_ANON_KEY,
-            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-          },
-        }
+        { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
       );
       if (!res.ok) throw new Error("Risposta non valida da Supabase");
       const data = await res.json();
@@ -841,50 +466,10 @@
     }
   }
 
-  function getBuckets() {
-    const now = new Date();
-    const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const endToday = new Date(startToday); endToday.setDate(startToday.getDate() + 1);
-    const endWeek = new Date(startToday); endWeek.setDate(startToday.getDate() + 7);
-    const startWeekAgo = new Date(startToday); startWeekAgo.setDate(startToday.getDate() - 7);
-
-    return {
-      oggi: events.filter(e => e.dateObj >= startToday && e.dateObj < endToday),
-      // "Questa settimana" parte da domani: gli eventi di oggi sono già nella loro sezione
-      settimana: events.filter(e => e.dateObj >= endToday && e.dateObj < endWeek),
-      // "Prossimamente" parte da dopo la settimana corrente, senza limite massimo:
-      // include anche i mesi successivi
-      mese: events.filter(e => e.dateObj >= endWeek),
-      passati: events
-        .filter(e => e.dateObj >= startWeekAgo && e.dateObj < startToday)
-        .sort((a, b) => b.dateObj - a.dateObj), // più recenti prima
-    };
-  }
-
-  // Etichetta per i separatori di data nella sezione "Questa settimana":
-  // "Domani" per il giorno successivo a oggi, poi il nome del giorno
-  // (Giovedì, Venerdì, ...) per tutti gli altri.
   const MONTHS_IT = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
-
-  // Separatore usato in "Prossimamente": es. "Ottobre" quando cambia mese,
-  // poi "Luned\u00ec 6" per ogni giorno diverso dentro quel mese
-  function monthDayLabel(dateObj) {
-    const weekday = dateObj.toLocaleDateString('it-IT', { weekday: 'long' });
-    const w = weekday.charAt(0).toUpperCase() + weekday.slice(1);
-    return `${w} ${dateObj.getDate()}`;
-  }
   function monthLabel(dateObj) {
     const m = MONTHS_IT[dateObj.getMonth()];
     return m.charAt(0).toUpperCase() + m.slice(1);
-  }
-
-  function dayLabel(dateObj, now) {
-    const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const startTarget = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
-    const diffDays = Math.round((startTarget - startToday) / 86400000);
-    if (diffDays === 1) return 'Domani';
-    const name = dateObj.toLocaleDateString('it-IT', { weekday: 'long' });
-    return name.charAt(0).toUpperCase() + name.slice(1);
   }
 
   function formatDate(e) {
@@ -892,238 +477,12 @@
     const startT = e.dateObj.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
     if (e.endDateObj) {
       const endT = e.endDateObj.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-      return `${s} · <span class="meta-time">${startT}–${endT}</span>`;
+      return `${s} · ${startT}–${endT}`;
     }
-    return `${s} · <span class="meta-time">${startT}</span>`;
+    return `${s} · ${startT}`;
   }
 
-  // Orario oltre il quale l'evento è considerato concluso:
-  // la sua fine, se specificata, altrimenti il suo inizio.
-  function eventCutoff(e) {
-    return e.endDateObj || e.dateObj;
-  }
-  function isLive(e, now) {
-    return !!e.endDateObj && now >= e.dateObj && now <= e.endDateObj;
-  }
-  function isElapsed(e, now) {
-    return now > eventCutoff(e);
-  }
-  // Il "prossimo" in assoluto: il primo evento non ancora iniziato, in ordine cronologico.
-  function getNextEvent(now) {
-    return events.find(e => e.dateObj > now) || null;
-  }
-
-  const emptyMessages = {
-    oggi: { text: "Nessun evento in programma per oggi.", jump: "settimana", cta: "Guarda questa settimana" },
-    settimana: { text: "Nessun evento in programma questa settimana.", jump: "mese", cta: "Guarda questo mese" },
-    mese: { text: "Nessun evento in programma nei prossimi giorni.", jump: null, cta: null },
-    passati: { text: "Nessun evento negli ultimi 7 giorni.", jump: null, cta: null },
-  };
-
-  // Icona "condividi" (SVG inline, eredita il colore col currentColor)
-  const SHARE_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.6" x2="15.4" y2="6.4"/><line x1="8.6" y1="13.4" x2="15.4" y2="17.6"/></svg>`;
-
-  function render(tab) {
-    document.querySelectorAll('.tab').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.tab === tab);
-    });
-
-    const buckets = getBuckets();
-    const list = buckets[tab];
-    const container = document.getElementById('list');
-    container.innerHTML = '';
-
-    if (list.length === 0) {
-      const info = emptyMessages[tab];
-      const div = document.createElement('div');
-      div.className = 'empty';
-      div.innerHTML = `<div>${info.text}</div>` +
-        (info.jump ? `<button data-jump="${info.jump}">${info.cta}</button>` : '');
-      container.appendChild(div);
-      const jumpBtn = div.querySelector('button');
-      if (jumpBtn) jumpBtn.addEventListener('click', () => render(info.jump));
-      return;
-    }
-
-    const isPastTab = tab === 'passati';
-    const now = new Date();
-    const nextEvent = isPastTab ? null : getNextEvent(now);
-    let lastDayKey = null;
-    let lastMonthKey = null;
-
-    list.forEach((e) => {
-      if (tab === 'settimana') {
-        const dayKey = e.dateObj.toDateString();
-        if (dayKey !== lastDayKey) {
-          lastDayKey = dayKey;
-          const sep = document.createElement('div');
-          sep.className = 'day-separator';
-          sep.textContent = dayLabel(e.dateObj, now);
-          container.appendChild(sep);
-        }
-      }
-
-      if (tab === 'mese') {
-        const monthKey = e.dateObj.getFullYear() + '-' + e.dateObj.getMonth();
-        if (monthKey !== lastMonthKey) {
-          lastMonthKey = monthKey;
-          lastDayKey = null;
-          const msep = document.createElement('div');
-          msep.className = 'month-separator';
-          msep.textContent = monthLabel(e.dateObj);
-          container.appendChild(msep);
-        }
-        const dayKey = e.dateObj.toDateString();
-        if (dayKey !== lastDayKey) {
-          lastDayKey = dayKey;
-          const sep = document.createElement('div');
-          sep.className = 'day-separator';
-          sep.textContent = monthDayLabel(e.dateObj);
-          container.appendChild(sep);
-        }
-      }
-
-      const card = document.createElement('div');
-      card.dataset.eventId = e.id;
-      const live = !isPastTab && isLive(e, now);
-      const elapsed = !isPastTab && isElapsed(e, now);
-      const isNext = !isPastTab && nextEvent && e.id === nextEvent.id;
-
-      card.className = 'card'
-        + (isNext ? ' next' : '')
-        + (live ? ' live' : '')
-        + (elapsed && !isNext ? ' elapsed' : '')
-        + (isPastTab ? ' past' : '');
-
-      const subs = e.sub_events || [];
-      const hasDetails = !!(e.image_url || e.description || subs.length);
-      const canRemind = !isPastTab;
-      const isReminded = !!localStorage.getItem('ue_reminded_' + e.id);
-      const hasSource = !!(e.link && e.link !== '#');
-
-      card.innerHTML = `
-        ${live ? `<div class="card-live-banner">🔴 Evento live in questo momento: sei ancora in tempo!</div>` : ''}
-        <div class="card-top-row">
-          <div class="card-meta">${isNext ? 'Il prossimo · ' : ''}${formatDate(e)}</div>
-          ${hasSource ? `<a class="source-pill" href="${e.link}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation(); track('click_fonte', {evento: '${e.title.replace(/'/g, "\\'")}'})">🔗 Fonte</a>` : ''}
-        </div>
-        <div class="card-title-row">
-          <div class="card-title">${e.title}</div>
-        </div>
-        <div class="card-place">📍 ${e.place}</div>
-        <div class="card-action-row">
-          ${hasDetails ? `<svg class="card-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>` : `<div></div>`}
-          <div class="card-action-buttons">
-            <button class="share-btn" data-event-id="${e.id}" title="Condividi evento" aria-label="Condividi evento">${SHARE_ICON}</button>
-            ${canRemind ? `<button class="remind-btn${isReminded ? ' active' : ''}" data-event-id="${e.id}">${isReminded ? '🔔 Promemoria attivo' : '🔔 Ricordamelo'}</button>` : ''}
-          </div>
-        </div>
-        ${hasDetails ? `
-        <div class="card-details">
-          <div class="card-details-inner">
-            ${e.image_url ? `<img class="card-image" src="${e.image_url}" alt="Locandina evento" loading="lazy" onerror="this.remove()">` : ''}
-            ${(e.description || !subs.length) ? `<div class="card-description">${e.description || 'Nessuna descrizione disponibile.'}</div>` : ''}
-            ${subs.length ? `<div class="sub-events">
-              <div class="sub-events-title">Programma (${subs.length} appuntamenti)</div>
-              ${subs.map(x => `<div class="sub-item">
-                <div class="sub-time">${x.time || ''}</div>
-                <div>
-                  <div class="sub-name">${x.title || ''}</div>
-                  ${x.place ? `<div class="sub-place">📍 ${x.place}</div>` : ''}
-                  ${x.description ? `<div class="sub-desc">${x.description}</div>` : ''}
-                </div>
-              </div>`).join('')}
-            </div>` : ''}
-          </div>
-        </div>` : ''}
-      `;
-
-      if (hasDetails) {
-        card.addEventListener('click', () => {
-          const opening = !card.classList.contains('expanded');
-          card.classList.toggle('expanded');
-          if (opening) track('apri_dettagli', { evento: e.title });
-        });
-      }
-
-      const remindBtn = card.querySelector('.remind-btn');
-      if (remindBtn) {
-        remindBtn.addEventListener('click', (evt) => {
-          evt.stopPropagation();
-          const activating = !remindBtn.classList.contains('active');
-          track(activating ? 'click_ricordamelo' : 'rimuovi_ricordamelo', { evento: e.title });
-          remindMe(e.id, remindBtn);
-        });
-      }
-
-      const shareBtn = card.querySelector('.share-btn');
-      if (shareBtn) {
-        shareBtn.addEventListener('click', (evt) => {
-          evt.stopPropagation();
-          track('click_condividi', { evento: e.title });
-          shareEvent(e);
-        });
-      }
-
-      container.appendChild(card);
-    });
-  }
-
-  const pastBtn = document.getElementById('past-btn');
-  const tabsNav = document.getElementById('tabs');
-  let inPastView = false;
-
-  function exitPastView() {
-    inPastView = false;
-    tabsNav.style.display = 'flex';
-    pastBtn.textContent = 'Cosa mi sono perso';
-    pastBtn.classList.remove('active-past');
-  }
-
-  document.querySelectorAll('.tab').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (inPastView) exitPastView();
-      render(btn.dataset.tab);
-    });
-  });
-
-  pastBtn.addEventListener('click', () => {
-    if (inPastView) {
-      exitPastView();
-      render('oggi');
-      return;
-    }
-    inPastView = true;
-    tabsNav.style.display = 'none';
-    pastBtn.textContent = '← Torna agli eventi';
-    pastBtn.classList.add('active-past');
-    render('passati');
-  });
-
-  document.getElementById('segnala-link').href = "https://forms.gle/357kSGUfBum8gNg58";
-
-  // ==================================================================
-  // MODALITÀ "SCOPRI" — feed a schermo intero stile TikTok, un evento
-  // alla volta. Ogni card mostra da sola: cos'è, quando è, perché
-  // vale la pena andarci. Si scorre verticalmente (swipe/scroll).
-  // ==================================================================
-  const DISCOVER_REASONS = [
-    "Un modo diverso per staccare dalla solita routine di lezioni.",
-    "Occasione buona per conoscere gente nuova nel campus.",
-    "Vale un salto, anche solo per curiosità: dura poco.",
-    "Di quegli eventi di cui poi si parla il giorno dopo.",
-    "Piccolo impegno, possibile bel ricordo da raccontare.",
-    "Un'ora diversa dal solito, giusto per cambiare aria.",
-  ];
-  function discoverReason(e) {
-    if (e.description) {
-      const plain = e.description.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-      if (plain) return plain.length > 170 ? plain.slice(0, 167) + '…' : plain;
-    }
-    const sum = String(e.id).split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-    return DISCOVER_REASONS[sum % DISCOVER_REASONS.length];
-  }
-  function discoverDateLabel(e, now) {
+  function feedDateLabel(e, now) {
     const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const startTarget = new Date(e.dateObj.getFullYear(), e.dateObj.getMonth(), e.dateObj.getDate());
     const diffDays = Math.round((startTarget - startToday) / 86400000);
@@ -1139,207 +498,218 @@
     return `${d} · ${t}`;
   }
 
-  const discoverOverlay = document.getElementById('discover-overlay');
-  const discoverFeed = document.getElementById('discover-feed');
-  const discoverProgress = document.getElementById('discover-progress');
-  let discoverList = [];
-  let discoverObserver = null;
-
-  function buildDiscoverList() {
-    const now = new Date();
-    // Ordine: prima i futuri (dal più vicino), poi eventualmente i passati recenti in coda
-    const upcoming = events.filter(e => eventCutoff(e) >= now);
-    const recentPast = events
-      .filter(e => eventCutoff(e) < now)
-      .sort((a, b) => b.dateObj - a.dateObj)
-      .slice(0, 5);
-    return [...upcoming, ...recentPast];
+  const FEED_REASONS = [
+    "Un modo diverso per staccare dalla solita routine di lezioni.",
+    "Occasione buona per conoscere gente nuova nel campus.",
+    "Vale un salto, anche solo per curiosità: dura poco.",
+    "Di quegli eventi di cui poi si parla il giorno dopo.",
+    "Piccolo impegno, possibile bel ricordo da raccontare.",
+    "Un'ora diversa dal solito, giusto per cambiare aria.",
+  ];
+  function feedReason(e) {
+    if (e.description) {
+      const plain = e.description.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      if (plain) return plain.length > 170 ? plain.slice(0, 167) + '…' : plain;
+    }
+    const sum = String(e.id).split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+    return FEED_REASONS[sum % FEED_REASONS.length];
   }
 
-  function renderDiscoverSlide(e, now) {
+  function eventCutoff(e) { return e.endDateObj || e.dateObj; }
+  function isLive(e, now) { return !!e.endDateObj && now >= e.dateObj && now <= e.endDateObj; }
+  function getNextEvent(now) { return events.find(e => e.dateObj > now) || null; }
+
+  const SHARE_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.6" x2="15.4" y2="6.4"/><line x1="8.6" y1="13.4" x2="15.4" y2="17.6"/></svg>`;
+
+  // ==================================================================
+  // IL FEED — un'unica lista continua: eventi recenti passati (7 giorni)
+  // + oggi + tutti i futuri, in ordine cronologico. Si scorre e basta.
+  // ==================================================================
+  let feedList = [];
+  const feedEl = document.getElementById('feed');
+
+  function buildFeedList() {
+    const now = new Date();
+    const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startWeekAgo = new Date(startToday); startWeekAgo.setDate(startToday.getDate() - 7);
+    return events.filter(e => eventCutoff(e) >= startWeekAgo); // events è già ordinato per data crescente
+  }
+
+  function renderFeedSlide(e, now, nextEvent) {
     const isReminded = !!localStorage.getItem('ue_reminded_' + e.id);
     const live = isLive(e, now);
+    const isNext = nextEvent && e.id === nextEvent.id;
     const hasSource = !!(e.link && e.link !== '#');
+    const subs = e.sub_events || [];
+
     const slide = document.createElement('div');
-    slide.className = 'discover-slide' + (live ? ' is-live' : '');
+    slide.className = 'feed-slide' + (live ? ' is-live' : '');
     slide.dataset.eventId = e.id;
+
+    const subsHtml = subs.length ? `<div style="margin-top:8px;font-size:12.5px;color:var(--muted)">+ ${subs.length} appuntamenti nel programma</div>` : '';
+
     slide.innerHTML = `
-      <div class="discover-slide-backdrop${e.image_url ? '' : ' no-image'}" ${e.image_url ? `style="background-image:url('${e.image_url}')"` : ''}></div>
-      ${e.image_url ? `<div class="discover-slide-poster"><img src="${e.image_url}" alt="Locandina evento" loading="lazy" onerror="this.parentElement.remove()"></div>` : ''}
-      <div class="discover-slide-gradient"></div>
-      <div class="discover-content">
-        <div class="discover-date-badge">${live ? '🔴 LIVE ORA · ' : ''}${discoverDateLabel(e, now)}</div>
-        <div class="discover-title">${e.title}</div>
-        <div class="discover-place">📍 ${e.place}</div>
-        <div class="discover-reason">${discoverReason(e)}</div>
-        <div class="discover-actions">
+      <div class="feed-meta-row">
+        <div class="feed-badge">${live ? '🔴 LIVE ORA · ' : (isNext ? 'Il prossimo · ' : '')}${feedDateLabel(e, now)}</div>
+        ${hasSource ? `<a class="source-pill" href="${e.link}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation(); track('click_fonte', {evento: '${e.title.replace(/'/g, "\\'")}'})">🔗 Fonte</a>` : ''}
+      </div>
+      <div class="feed-poster-wrap">
+        ${e.image_url
+          ? `<img class="feed-poster" src="${e.image_url}" alt="Locandina evento" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'feed-poster-empty\\'>🎉<br>${e.title.replace(/'/g, "\\'")}</div>'">`
+          : `<div class="feed-poster-empty">🎉<br>${e.title}</div>`}
+      </div>
+      <div class="feed-info">
+        <div class="feed-title">${e.title}</div>
+        <div class="feed-place">📍 ${e.place}${subsHtml}</div>
+        <div class="feed-reason"><b>Perché andarci</b> — ${feedReason(e)}</div>
+        <div class="feed-actions">
           <button class="remind-btn${isReminded ? ' active' : ''}" data-event-id="${e.id}">${isReminded ? '🔔 Promemoria attivo' : '🔔 Ricordamelo'}</button>
           <button class="share-btn" data-event-id="${e.id}" title="Condividi evento" aria-label="Condividi evento">${SHARE_ICON}</button>
-          ${hasSource ? `<a class="source-pill discover-source" href="${e.link}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation(); track('click_fonte_scopri', {evento: '${e.title.replace(/'/g, "\\'")}'})">🔗 Fonte</a>` : ''}
         </div>
       </div>
     `;
-    const remindBtn = slide.querySelector('.remind-btn');
-    remindBtn.addEventListener('click', () => {
-      track(remindBtn.classList.contains('active') ? 'rimuovi_ricordamelo_scopri' : 'click_ricordamelo_scopri', { evento: e.title });
-      remindMe(e.id, remindBtn);
+
+    slide.querySelector('.remind-btn').addEventListener('click', () => {
+      const btn = slide.querySelector('.remind-btn');
+      track(btn.classList.contains('active') ? 'rimuovi_ricordamelo' : 'click_ricordamelo', { evento: e.title });
+      remindMe(e.id, btn);
     });
     slide.querySelector('.share-btn').addEventListener('click', () => {
-      track('click_condividi_scopri', { evento: e.title });
+      track('click_condividi', { evento: e.title });
       shareEvent(e);
     });
+
     return slide;
   }
 
-  function openDiscover(startId) {
-    discoverList = buildDiscoverList();
-    if (!discoverList.length) {
-      showToast('Nessun evento da scoprire al momento 🙁');
+  function buildEndSlide() {
+    const div = document.createElement('div');
+    div.className = 'feed-slide feed-end';
+    div.innerHTML = `
+      <div class="end-title">Per ora è tutto 👋</div>
+      <div class="cta">
+        <p>Conosci un evento che manca?</p>
+        <a href="https://forms.gle/357kSGUfBum8gNg58" target="_blank" rel="noopener noreferrer">Segnalalo in 30 secondi</a>
+      </div>
+      <footer>Uni Events è un progetto studentesco indipendente, non affiliato ufficialmente all'Ateneo. Le fonti degli eventi sono sempre linkate.</footer>
+    `;
+    return div;
+  }
+
+  // Tiene traccia di quale evento è attualmente a schermo (serve per il
+  // pull-to-refresh: dopo l'aggiornamento si torna dove si era rimasti)
+  let currentVisibleId = null;
+  let feedObserver = null;
+
+  function renderFeed(startId) {
+    feedList = buildFeedList();
+    feedEl.innerHTML = '';
+
+    if (!feedList.length) {
+      feedEl.innerHTML = '<div class="feed-slide" style="align-items:center;justify-content:center;text-align:center;color:var(--muted)">Nessun evento al momento.</div>';
       return;
     }
-    track('apri_scopri', { totale: discoverList.length });
-    const now = new Date();
-    discoverFeed.innerHTML = '';
-    discoverList.forEach(e => discoverFeed.appendChild(renderDiscoverSlide(e, now)));
 
-    // Piccolo suggerimento "scorri" solo sulla primissima card, sparisce da solo
-    const firstSlide = discoverFeed.firstElementChild;
-    if (firstSlide && discoverList.length > 1) {
+    const now = new Date();
+    const nextEvent = getNextEvent(now);
+    feedList.forEach(e => feedEl.appendChild(renderFeedSlide(e, now, nextEvent)));
+    feedEl.appendChild(buildEndSlide());
+
+    // Suggerimento "scorri" solo sulla primissima card
+    const firstSlide = feedEl.firstElementChild;
+    if (firstSlide && feedList.length > 1) {
+      firstSlide.style.position = 'relative';
       const hint = document.createElement('div');
-      hint.className = 'discover-hint';
-      hint.id = 'discover-hint';
-      hint.innerHTML = '⌃<br>Scorri per il prossimo';
+      hint.className = 'feed-hint';
+      hint.id = 'feed-hint';
+      hint.innerHTML = '⌄<br>Scorri per il prossimo';
       firstSlide.appendChild(hint);
     }
 
     let startIndex = 0;
     if (startId != null) {
-      const idx = discoverList.findIndex(e => String(e.id) === String(startId));
+      const idx = feedList.findIndex(e => String(e.id) === String(startId));
       if (idx >= 0) startIndex = idx;
+    } else {
+      const idx = feedList.findIndex(e => eventCutoff(e) >= now);
+      startIndex = idx >= 0 ? idx : feedList.length - 1;
     }
-    updateDiscoverProgress(startIndex + 1, discoverList.length);
+    requestAnimationFrame(() => {
+      feedEl.scrollTop = startIndex * feedEl.clientHeight;
+      if (startId != null) {
+        const target = feedEl.children[startIndex];
+        if (target) {
+          target.classList.add('shared-highlight');
+          setTimeout(() => target.classList.remove('shared-highlight'), 2400);
+        }
+      }
+    });
 
-    if (discoverObserver) discoverObserver.disconnect();
-    discoverObserver = new IntersectionObserver((entries) => {
+    if (feedObserver) feedObserver.disconnect();
+    feedObserver = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting && entry.intersectionRatio > 0.6) {
-          const idx = discoverList.findIndex(e => String(e.id) === entry.target.dataset.eventId);
-          if (idx >= 0) updateDiscoverProgress(idx + 1, discoverList.length);
-          const hintEl = document.getElementById('discover-hint');
+          const hintEl = document.getElementById('feed-hint');
           if (hintEl) hintEl.remove();
+          if (entry.target.dataset.eventId) currentVisibleId = entry.target.dataset.eventId;
         }
       });
-    }, { root: discoverFeed, threshold: [0.6] });
-    Array.from(discoverFeed.children).forEach(slide => discoverObserver.observe(slide));
-
-    // Aspetta che il feed sia nel DOM e visibile prima di posizionare lo scroll
-    requestAnimationFrame(() => { discoverFeed.scrollTop = startIndex * discoverFeed.clientHeight; });
+    }, { root: feedEl, threshold: [0.6] });
+    Array.from(feedEl.children).forEach(slide => feedObserver.observe(slide));
   }
 
-  function updateDiscoverProgress(n, total) {
-    discoverProgress.textContent = `${n} / ${total}`;
+  function scrollToFeedIndex(idx) {
+    const target = feedEl.children[idx];
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  let currentMode = 'feed';
-  const modeSwitchBtn = document.getElementById('mode-switch-btn');
-  const wrapEl = document.querySelector('.wrap');
-
-  function showFeed(startId) {
-    currentMode = 'feed';
-    wrapEl.style.display = 'none';
-    discoverOverlay.classList.add('visible');
-    document.body.style.overflow = 'hidden';
-    modeSwitchBtn.textContent = '📋 Lista';
-    openDiscover(startId);
-  }
-
-  function showList(tab) {
-    currentMode = 'list';
-    discoverOverlay.classList.remove('visible');
-    document.body.style.overflow = '';
-    wrapEl.style.display = '';
-    modeSwitchBtn.textContent = '🎬 Scopri';
-    if (discoverObserver) discoverObserver.disconnect();
-    if (inPastView) render('passati'); else render(tab || document.querySelector('.tab.active')?.dataset.tab || 'oggi');
-  }
-
-  modeSwitchBtn.addEventListener('click', () => {
-    track(currentMode === 'feed' ? 'passa_a_lista' : 'passa_a_scopri');
-    if (currentMode === 'feed') showList(); else showFeed();
+  // ==================================================================
+  // MENU (☰): avvisami, vai a oggi, cosa mi sono perso, segnala evento
+  // ==================================================================
+  const menuBtn = document.getElementById('menu-btn');
+  const menuPanel = document.getElementById('menu-panel');
+  menuBtn.addEventListener('click', (evt) => { evt.stopPropagation(); menuPanel.classList.toggle('open'); });
+  document.addEventListener('click', (evt) => {
+    if (menuPanel.classList.contains('open') && !menuPanel.contains(evt.target) && evt.target !== menuBtn) {
+      menuPanel.classList.remove('open');
+    }
   });
 
-  // In quale sezione si trova un dato evento (oggi / settimana / mese / passati)?
-  function findTabForEvent(eventId, buckets) {
-    const id = String(eventId);
-    if (buckets.oggi.some(e => String(e.id) === id)) return 'oggi';
-    if (buckets.settimana.some(e => String(e.id) === id)) return 'settimana';
-    if (buckets.mese.some(e => String(e.id) === id)) return 'mese';
-    if (buckets.passati.some(e => String(e.id) === id)) return 'passati';
-    return null; // evento non presente in nessuna sezione visibile (troppo lontano nel tempo)
-  }
+  document.getElementById('menu-today').addEventListener('click', () => {
+    track('menu_vai_a_oggi');
+    const now = new Date();
+    const idx = feedList.findIndex(e => eventCutoff(e) >= now);
+    if (idx >= 0) scrollToFeedIndex(idx); else showToast('Nessun evento futuro in programma.');
+    menuPanel.classList.remove('open');
+  });
 
-  // Scorre fino alla card dell'evento e la fa pulsare, per farla notare.
-  // Riprova un paio di volte: subito dopo il render il layout potrebbe
-  // non essere ancora del tutto stabile (immagini, font, ecc.).
-  function scrollToEventCard(eventId, attempt = 0) {
-    const card = document.querySelector(`.card[data-event-id="${CSS.escape(String(eventId))}"]`);
-    if (!card) {
-      if (attempt < 10) setTimeout(() => scrollToEventCard(eventId, attempt + 1), 120);
-      return;
-    }
-    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    card.classList.add('shared-highlight');
-    setTimeout(() => card.classList.remove('shared-highlight'), 2400);
-  }
-
-  // Se l'URL contiene ?event=ID (arrivato da una condivisione), apre
-  // automaticamente la sezione giusta e scorre fino a quell'evento.
-  // Ritorna true se ha gestito un evento condiviso, false altrimenti.
-  function handleSharedEvent() {
-    const params = new URLSearchParams(window.location.search);
-    const sharedId = params.get('event');
-    if (!sharedId) return false;
-
-    const buckets = getBuckets();
-    const tab = findTabForEvent(sharedId, buckets);
-
-    // Ripulisce l'URL subito, così un refresh o un cambio tab successivo
-    // non ripete lo scroll/l'evidenziazione
-    history.replaceState({}, '', window.location.pathname);
-
-    if (!tab) return false; // evento non trovato (es. ormai troppo vecchio)
-
-    if (tab === 'passati') {
-      inPastView = true;
-      tabsNav.style.display = 'none';
-      pastBtn.textContent = '← Torna agli eventi';
-      pastBtn.classList.add('active-past');
-      render('passati');
+  document.getElementById('menu-past').addEventListener('click', () => {
+    track('menu_cosa_mi_sono_perso');
+    const now = new Date();
+    if (feedList.length && eventCutoff(feedList[0]) < now) {
+      scrollToFeedIndex(0);
     } else {
-      exitPastView();
-      render(tab);
+      showToast('Nessun evento perso negli ultimi 7 giorni 🎉');
     }
+    menuPanel.classList.remove('open');
+  });
 
-    scrollToEventCard(sharedId);
-    return true;
-  }
+  document.getElementById('menu-segnala').href = "https://forms.gle/357kSGUfBum8gNg58";
 
   async function init() {
-    const container = document.getElementById('list');
-    container.innerHTML = '<div class="empty">Carico gli eventi…</div>';
+    feedEl.innerHTML = '<div class="feed-slide" style="align-items:center;justify-content:center;color:var(--muted)">Carico gli eventi…</div>';
 
     const rawEvents = await fetchEvents();
     events = rawEvents
       .map(e => ({ ...e, dateObj: new Date(e.date), endDateObj: e.end ? new Date(e.end) : null }))
       .sort((a, b) => a.dateObj - b.dateObj);
 
-    render('oggi'); // prepara la lista in background, così è pronta quando si passa a "Lista"
-    const handledShare = handleSharedEvent();
-    if (!handledShare) showFeed(); else showList();
+    const params = new URLSearchParams(window.location.search);
+    const sharedId = params.get('event');
+    if (sharedId) history.replaceState({}, '', window.location.pathname);
 
-    // Se l'utente aveva già attivato le notifiche in passato, rinnova
-    // silenziosamente l'iscrizione ogni volta che apre l'app, così resta
-    // valida più a lungo (non chiede di nuovo il permesso: lo ha già dato).
+    renderFeed(sharedId || null);
+
     if (localStorage.getItem('ue_notify_new') === '1' || localStorage.getItem('ue_sub_id')) {
       ensureSubscribed().catch(() => {});
     }
@@ -1358,28 +728,20 @@
     events = raw
       .map(e => ({ ...e, dateObj: new Date(e.date), endDateObj: e.end ? new Date(e.end) : null }))
       .sort((a, b) => a.dateObj - b.dateObj);
-    const tab = inPastView
-      ? 'passati'
-      : (document.querySelector('.tab.active')?.dataset.tab || 'oggi');
-    render(tab);
+    renderFeed(currentVisibleId);
   }
 
-  // Riaprendo l'app (dopo più di 1 minuto) si aggiorna da sola
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && Date.now() - lastRefresh > 60000) {
       refreshEvents();
     }
   });
 
-  // Tira giù dalla cima della pagina per aggiornare
   let pullStartY = 0, pulling = false;
-  document.addEventListener('touchstart', (e) => {
-    if (window.scrollY <= 0) {
-      pullStartY = e.touches[0].clientY;
-      pulling = true;
-    }
+  feedEl.addEventListener('touchstart', (e) => {
+    if (feedEl.scrollTop <= 0) { pullStartY = e.touches[0].clientY; pulling = true; }
   }, { passive: true });
-  document.addEventListener('touchend', (e) => {
+  feedEl.addEventListener('touchend', (e) => {
     if (!pulling) return;
     pulling = false;
     if (e.changedTouches[0].clientY - pullStartY > 90) {
@@ -1407,30 +769,22 @@
     const isStandalone =
       window.matchMedia('(display-mode: standalone)').matches ||
       window.navigator.standalone === true;
-    if (isStandalone) return; // già installata, niente banner
+    if (isStandalone) return;
 
     const ua = window.navigator.userAgent;
     const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
 
-    function showBanner() {
-      banner.classList.add('visible');
-    }
+    function showBanner() { banner.classList.add('visible'); }
 
     if (isIOS) {
-      // iOS non ha un popup automatico: mostriamo istruzioni manuali.
-      // Su iOS tutti i browser (Safari, Chrome, Firefox, Edge...) usano lo
-      // stesso motore di Apple e hanno lo stesso pulsante "Condividi",
-      // quindi le istruzioni valgono per tutti.
       textEl.innerHTML = `<strong>Installa Uni Events</strong>Tocca l'icona Condividi <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M12 2v13"/><path d="M8 6l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg> (in Safari in basso, nei ⋯ in alto su Chrome e altri browser), poi "Aggiungi a Home".`;
       actionBtn.style.display = 'none';
       showBanner();
       return;
     }
 
-    // Si accorge quando l'app viene DAVVERO installata (non solo cliccato "Installa")
     window.addEventListener('appinstalled', () => track('app_installata'));
 
-    // Android / Chrome: usiamo il prompt nativo del browser
     let deferredPrompt = null;
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
@@ -1444,8 +798,6 @@
       deferredPrompt.prompt();
       await deferredPrompt.userChoice;
       deferredPrompt = null;
-      // Nascondiamo solo per ora, senza "ricordarlo per sempre":
-      // se in futuro l'app viene disinstallata, il banner potrà ricomparire.
       banner.classList.remove('visible');
     });
   })();
@@ -1453,8 +805,6 @@
   // ==================================================================
   // NOTIFICHE PUSH
   // ==================================================================
-
-  // Converte la chiave VAPID (testo) nel formato che il browser richiede
   function urlBase64ToUint8Array(base64String) {
     const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
     const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
@@ -1474,28 +824,19 @@
     return 'serviceWorker' in navigator && 'PushManager' in window;
   }
 
-  // Assicura che questo dispositivo abbia una sottoscrizione attiva.
-  // Se ce l'ha già (salvata in localStorage), la riusa senza richiedere
-  // di nuovo il permesso. Ritorna l'id della riga in push_subscriptions.
   async function ensureSubscribed() {
     if (!pushSupported()) {
       alert('Le notifiche non sono supportate su questo browser/dispositivo (su iPhone serve prima installare il sito sulla schermata Home).');
       return null;
     }
-
     try {
       const permission = await Notification.requestPermission();
       if (permission === 'denied') {
         alert('Hai bloccato le notifiche per questo sito in passato. Per attivarle, vai nelle impostazioni del browser (icona del lucchetto accanto all\'indirizzo) e consenti le notifiche, poi riprova.');
         return null;
       }
-      if (permission !== 'granted') {
-        return null; // l'utente ha semplicemente chiuso la richiesta senza rispondere
-      }
+      if (permission !== 'granted') return null;
 
-      // Non ci fidiamo ciecamente dell'id salvato in precedenza: verifichiamo
-      // sempre che il browser abbia ancora una sottoscrizione push valida
-      // (potrebbe essere scaduta, ad es. dopo troppi test o un cambio di dispositivo).
       const reg = await navigator.serviceWorker.ready;
       let sub = await reg.pushManager.getSubscription();
       if (!sub) {
@@ -1506,9 +847,6 @@
       }
       const subJson = sub.toJSON();
 
-      // "Upsert": se questo endpoint esiste già nel database lo riusa,
-      // altrimenti ne crea uno nuovo. Così è sempre allineato con quello
-      // che il browser ha DAVVERO in questo momento.
       const res = await fetch(`${SUPABASE_URL}/rest/v1/push_subscriptions?on_conflict=endpoint`, {
         method: 'POST',
         headers: {
@@ -1517,11 +855,7 @@
           'Content-Type': 'application/json',
           Prefer: 'resolution=merge-duplicates,return=representation',
         },
-        body: JSON.stringify({
-          endpoint: subJson.endpoint,
-          p256dh: subJson.keys.p256dh,
-          auth: subJson.keys.auth,
-        }),
+        body: JSON.stringify({ endpoint: subJson.endpoint, p256dh: subJson.keys.p256dh, auth: subJson.keys.auth }),
       });
       if (!res.ok) {
         const errText = await res.text();
@@ -1544,35 +878,26 @@
     }
   }
 
-  // Bottone generale in alto: "avvisami dei nuovi eventi"
   (function setupNotifButton() {
-    const btn = document.getElementById('notif-btn');
+    const btn = document.getElementById('menu-notif');
     if (localStorage.getItem('ue_notify_new') === '1') {
       btn.textContent = '🔔 Ti avviso!';
       btn.classList.add('active');
     }
     btn.addEventListener('click', async () => {
-      // Se è già attivo, un secondo click lo disattiva
       if (localStorage.getItem('ue_notify_new') === '1') {
         track('disattiva_avvisami');
         const subId = localStorage.getItem('ue_sub_id');
-        const originalText = btn.textContent;
         btn.textContent = 'Un attimo...';
         try {
           if (subId) {
             await fetch(`${SUPABASE_URL}/rest/v1/push_subscriptions?id=eq.${subId}`, {
               method: 'PATCH',
-              headers: {
-                apikey: SUPABASE_ANON_KEY,
-                Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-                'Content-Type': 'application/json',
-              },
+              headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' },
               body: JSON.stringify({ notify_new_events: false }),
             });
           }
-        } catch (err) {
-          console.warn('Errore disattivazione (procedo comunque):', err);
-        }
+        } catch (err) { console.warn('Errore disattivazione (procedo comunque):', err); }
         localStorage.removeItem('ue_notify_new');
         btn.textContent = '🔔 Avvisami!';
         btn.classList.remove('active');
@@ -1583,18 +908,11 @@
       const originalText = btn.textContent;
       btn.textContent = 'Un attimo...';
       const id = await ensureSubscribed();
-      if (!id) {
-        btn.textContent = originalText;
-        return;
-      }
+      if (!id) { btn.textContent = originalText; return; }
       try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/push_subscriptions?id=eq.${id}`, {
           method: 'PATCH',
-          headers: {
-            apikey: SUPABASE_ANON_KEY,
-            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-            'Content-Type': 'application/json',
-          },
+          headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({ notify_new_events: true }),
         });
         if (!res.ok) {
@@ -1614,30 +932,20 @@
     });
   })();
 
-  // Bottone dentro ogni evento: "ricordamelo il giorno stesso"
   async function remindMe(eventId, btnEl) {
     const already = localStorage.getItem('ue_reminded_' + eventId);
 
-    // Secondo click: rimuove il promemoria
     if (already) {
       const subId = localStorage.getItem('ue_sub_id');
       btnEl.textContent = 'Un attimo...';
       try {
         if (subId) {
-          await fetch(
-            `${SUPABASE_URL}/rest/v1/event_reminders?event_id=eq.${eventId}&subscription_id=eq.${subId}`,
-            {
-              method: 'DELETE',
-              headers: {
-                apikey: SUPABASE_ANON_KEY,
-                Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-              },
-            }
-          );
+          await fetch(`${SUPABASE_URL}/rest/v1/event_reminders?event_id=eq.${eventId}&subscription_id=eq.${subId}`, {
+            method: 'DELETE',
+            headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+          });
         }
-      } catch (err) {
-        console.warn('Errore rimozione promemoria (procedo comunque):', err);
-      }
+      } catch (err) { console.warn('Errore rimozione promemoria (procedo comunque):', err); }
       localStorage.removeItem('ue_reminded_' + eventId);
       btnEl.textContent = '🔔 Ricordamelo';
       btnEl.classList.remove('active');
@@ -1645,13 +953,9 @@
       return;
     }
 
-    // Primo click: attiva il promemoria
     btnEl.textContent = 'Attivo...';
     const id = await ensureSubscribed();
-    if (!id) {
-      btnEl.textContent = '🔔 Ricordamelo';
-      return;
-    }
+    if (!id) { btnEl.textContent = '🔔 Ricordamelo'; return; }
     let remindRes;
     try {
       remindRes = await fetch(`${SUPABASE_URL}/rest/v1/event_reminders`, {
@@ -1682,25 +986,15 @@
     showToast('🔔 Fatto! Ti avviseremo la mattina di questo evento, così non te lo perdi.');
   }
 
-  // Bottone di condivisione su ogni card: usa la Web Share API nativa
-  // (menu "condividi" del telefono) con fallback su copia negli appunti
-  // per i browser/desktop che non la supportano.
   async function shareEvent(e) {
     const text = `📅 ${e.title}\n📍 ${e.place}\n🗓️ ${formatDate(e)}\n\nScopri di più su Uni Events:`;
-    // Link al nostro sito con l'id dell'evento: aprendolo, l'app va
-    // automaticamente alla sezione giusta e mette in evidenza la card
     const url = `${window.location.origin}${window.location.pathname}?event=${encodeURIComponent(e.id)}`;
 
     if (navigator.share) {
-      try {
-        await navigator.share({ title: e.title, text, url });
-      } catch (err) {
-        // l'utente ha annullato la condivisione: nessun errore da mostrare
-        if (err.name !== 'AbortError') console.warn('Errore condivisione:', err);
-      }
+      try { await navigator.share({ title: e.title, text, url }); }
+      catch (err) { if (err.name !== 'AbortError') console.warn('Errore condivisione:', err); }
       return;
     }
-
     try {
       await navigator.clipboard.writeText(`${text}\n${url}`);
       showToast('📋 Copiato negli appunti!');
