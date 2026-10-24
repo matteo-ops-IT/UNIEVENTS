@@ -626,7 +626,7 @@
   async function fetchEvents() {
     try {
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/events?select=*&order=event_date.asc`,
+        `${SUPABASE_URL}/rest/v1/events?select=*&approved=eq.true&order=event_date.asc`,
         {
           headers: {
             apikey: SUPABASE_ANON_KEY,
