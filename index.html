@@ -1367,5 +1367,87 @@
     }
   }
 </script>
+  <!-- ==== LOCANDINE: intere + tocco per ingrandire (incollato prima di </body>) ==== -->
+  <style>
+    /* locandina intera, non ritagliata */
+    .card-image{
+      max-height:440px;
+      object-fit:contain;
+      background:var(--paper);
+      cursor:zoom-in;
+    }
+    /* ingrandimento a tutto schermo (elemento unico, fuori dalle card che sono ruotate) */
+    .lightbox{
+      position:fixed;
+      top:0; left:0; right:0; bottom:0;
+      background:rgba(0,0,0,0.9);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+      z-index:300;
+      cursor:zoom-out;
+    }
+    .lightbox.visible{ display:flex; }
+    .lightbox img{
+      max-width:100%;
+      max-height:100%;
+      object-fit:contain;
+      border-radius:2px;
+    }
+    .lightbox-close{
+      position:absolute;
+      top:14px;
+      right:16px;
+      width:40px;
+      height:40px;
+      border-radius:50%;
+      border:none;
+      background:rgba(255,255,255,0.18);
+      color:#fff;
+      font-size:20px;
+      line-height:1;
+      cursor:pointer;
+    }
+  </style>
+  <div class="lightbox" id="lightbox" role="dialog" aria-label="Locandina ingrandita">
+    <button class="lightbox-close" id="lightbox-close" aria-label="Chiudi">✕</button>
+    <img id="lightbox-img" alt="Locandina ingrandita">
+  </div>
+  <script>
+  (function () {
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const list = document.getElementById('list');
+    if (!lightbox || !lightboxImg || !list) return;
+
+    function openLightbox(src) {
+      lightboxImg.src = src;
+      lightbox.classList.add('visible');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeLightbox() {
+      lightbox.classList.remove('visible');
+      lightboxImg.removeAttribute('src');
+      document.body.style.overflow = '';
+    }
+
+    // Fase "capture": scatta PRIMA del click sulla card, così toccare la
+    // locandina la ingrandisce senza chiudere i dettagli dell'evento.
+    list.addEventListener('click', function (ev) {
+      const img = ev.target.closest && ev.target.closest('.card-image');
+      if (!img) return;
+      ev.stopPropagation();
+      try { if (typeof track === 'function') track('ingrandisci_locandina'); } catch (err) {}
+      openLightbox(img.currentSrc || img.src);
+    }, true);
+
+    lightbox.addEventListener('click', closeLightbox);
+    document.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Escape') closeLightbox();
+    });
+  })();
+  </script>
+  <!-- ==== fine blocco locandine ==== -->
 </body>
 </html>
