@@ -1604,6 +1604,13 @@
       border-color:var(--ink);
       color:var(--paper);
     }
+    /* parola cercata, evidenziata nei risultati */
+    mark.search-hit{
+      background:#FFE98A;
+      color:inherit;
+      border-radius:2px;
+      padding:0 1px;
+    }
     .search-chip-sep{
       flex-shrink:0;
       width:1px;
@@ -1643,6 +1650,13 @@
       tau:  /\btau\b|teatro auditorium/,
       cubo: CUBI_RE,
       cubi: CUBI_RE,
+    };
+
+    // Come evidenziare i sinonimi nel testo dei risultati (versione più corta, senza "ponte bucci")
+    const HILITE = {
+      tau:  /\btau\b|teatro auditorium/,
+      cubo: /\bcub[oi]\b/,
+      cubi: /\bcub[oi]\b/,
     };
 
     const tabs = document.getElementById('tabs');
@@ -1835,6 +1849,69 @@
       }
       const n = S.results.length;
       count.textContent = n === 1 ? '1 evento trovato' : n + ' eventi trovati';
+      highlightHits();
+    }
+
+    // ---------- evidenziazione delle parole cercate ----------
+    function highlightHits() {
+      const words = norm(input.value).split(/\s+/).filter(Boolean);
+      if (!words.length) return;
+      const regs = words.map(w => HILITE[w]
+        ? new RegExp(HILITE[w].source, 'g')
+        : new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'));
+      listEl.querySelectorAll('.card-title, .card-place, .card-description, .sub-name, .sub-place, .sub-desc')
+        .forEach(el => markIn(el, regs));
+    }
+
+    // Cerca nei nodi di testo di un elemento (senza toccare l'HTML) e avvolge le parole
+    // trovate in <mark>. Ignora maiuscole e accenti come fa la ricerca.
+    function markIn(el, regs) {
+      const nodes = [];
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+
+      nodes.forEach(node => {
+        const t = node.nodeValue;
+        let n = '';
+        const map = []; // posizione nel testo normalizzato → posizione nel testo originale
+        for (let i = 0; i < t.length; i++) {
+          const c = t[i].normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+          for (const ch of c) { n += ch; map.push(i); }
+        }
+
+        const ranges = [];
+        regs.forEach(re => {
+          re.lastIndex = 0;
+          let m;
+          while ((m = re.exec(n)) !== null) {
+            if (m[0].length === 0) { re.lastIndex++; continue; }
+            ranges.push([map[m.index], map[m.index + m[0].length - 1] + 1]);
+          }
+        });
+        if (!ranges.length) return;
+
+        // unisce gli intervalli che si sovrappongono
+        ranges.sort((a, b) => a[0] - b[0]);
+        const merged = [ranges[0].slice()];
+        for (let i = 1; i < ranges.length; i++) {
+          const last = merged[merged.length - 1];
+          if (ranges[i][0] <= last[1]) last[1] = Math.max(last[1], ranges[i][1]);
+          else merged.push(ranges[i].slice());
+        }
+
+        const frag = document.createDocumentFragment();
+        let pos = 0;
+        merged.forEach(([s, e]) => {
+          if (s > pos) frag.appendChild(document.createTextNode(t.slice(pos, s)));
+          const mk = document.createElement('mark');
+          mk.className = 'search-hit';
+          mk.textContent = t.slice(s, e);
+          frag.appendChild(mk);
+          pos = e;
+        });
+        if (pos < t.length) frag.appendChild(document.createTextNode(t.slice(pos)));
+        node.parentNode.replaceChild(frag, node);
+      });
     }
 
     // ---------- stato ricerca ----------
