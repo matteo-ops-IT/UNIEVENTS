@@ -1449,92 +1449,127 @@
   })();
   </script>
   <!-- ==== fine blocco locandine ==== -->
-  <!-- ==== RICERCA: lente accanto al logo → titolo / descrizione / luogo + giorno (incollato prima di </body>) ==== -->
+  <!-- ==== RICERCA: lente che si allarga in un ovale (stile Google) → titolo / descrizione / luogo + giorno (incollato prima di </body>) ==== -->
   <style>
     header{ position:relative; }
 
-    /* lente di ingrandimento, a destra del logo */
-    .search-toggle{
+    /* Ovale in alto a destra: chiuso è un cerchio con la lente,
+       aperto si allarga verso sinistra e mostra "Cerca un evento…" */
+    .search-pill{
       position:absolute;
       top:-3px;
       right:0;
+      z-index:5;
       width:40px;
       height:40px;
-      border-radius:50%;
-      border:1px solid var(--line);
+      display:flex;
+      align-items:center;
       background:#fff;
+      border:1px solid var(--line);
+      border-radius:100px;
+      overflow:hidden;
+      transition:width 0.28s ease, border-color 0.2s ease;
+    }
+    .search-pill:hover{ border-color:var(--muted); }
+    .search-pill.open{
+      width:100%;
+      border-color:var(--ink);
+    }
+    .search-lens{
+      flex-shrink:0;
+      width:38px;
+      height:38px;
+      border:none;
+      background:none;
       color:var(--ink);
-      cursor:pointer;
+      padding:0;
       display:flex;
       align-items:center;
       justify-content:center;
-      padding:0;
+      cursor:pointer;
     }
-    .search-toggle:hover{ border-color:var(--muted); }
-    .search-toggle.active{
-      background:var(--ink);
-      border-color:var(--ink);
-      color:var(--paper);
-    }
-    .search-toggle svg{ width:19px; height:19px; display:block; }
+    .search-lens svg{ width:19px; height:19px; display:block; }
 
-    /* pannello: compare solo dopo aver toccato la lente */
-    .search-panel{ display:none; margin-bottom:14px; }
-    .search-panel.open{ display:block; }
-    .search-row{
-      display:flex;
-      gap:8px;
-    }
-    .search-field{
-      position:relative;
+    .search-input{
       flex:1;
       min-width:0;
-    }
-    .search-input,
-    .search-date{
+      height:38px;
+      border:none;
+      outline:none;
+      background:transparent;
       font-family:'Inter',sans-serif;
       font-size:16px; /* 16px evita lo zoom automatico su iPhone */
       color:var(--ink);
-      background:#fff;
-      border:1px solid var(--line);
-      border-radius:6px;
-      padding:10px 12px;
-      height:42px;
-      outline:none;
+      padding:0 4px 0 0;
+      -webkit-appearance:none;
+      appearance:none;
     }
-    .search-input{
-      width:100%;
-      padding-right:36px;
+    .search-input::-webkit-search-cancel-button{ display:none; }
+
+    /* giorno: icona calendario (o la data scelta); sopra c'è il vero campo data, invisibile */
+    .search-cal{
+      position:relative;
+      flex-shrink:0;
+      height:30px;
+      min-width:30px;
+      padding:0 8px;
+      margin-right:2px;
+      border-radius:100px;
+      color:var(--muted);
+      font-size:13px;
+      font-weight:600;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:5px;
+      white-space:nowrap;
+    }
+    .search-cal svg{ width:16px; height:16px; display:block; flex-shrink:0; }
+    .search-cal.has-date{
+      background:var(--red);
+      color:#fff;
     }
     .search-date{
-      flex-shrink:0;
-      width:142px;
-    }
-    .search-input:focus,
-    .search-date:focus{
-      border-color:var(--ink);
-    }
-    .search-clear{
       position:absolute;
-      right:6px;
-      top:50%;
-      transform:translateY(-50%);
-      width:28px;
-      height:28px;
+      top:0; left:0;
+      width:100%;
+      height:100%;
+      opacity:0;
+      font-size:16px;
+      cursor:pointer;
+      border:none;
+      padding:0;
+    }
+
+    .search-clear{
+      flex-shrink:0;
+      width:30px;
+      height:30px;
+      margin-right:5px;
       border:none;
       border-radius:50%;
       background:var(--line);
       color:var(--ink);
-      font-size:13px;
+      font-size:12px;
       line-height:1;
       cursor:pointer;
-      display:none;
     }
-    .search-clear.visible{ display:block; }
+
+    /* da chiuso, tutto tranne la lente è nascosto (e non raggiungibile con Tab) */
+    .search-pill:not(.open) .search-input,
+    .search-pill:not(.open) .search-cal,
+    .search-pill:not(.open) .search-clear{
+      visibility:hidden;
+    }
+
+    /* mentre la ricerca è aperta il logo lascia spazio all'ovale */
+    header .logo{ transition:opacity 0.2s ease; }
+    header.search-open .logo{ opacity:0; pointer-events:none; }
+
     .search-count{
       font-size:13px;
       color:var(--muted);
-      margin:8px 2px 0;
+      margin:-8px 2px 14px;
     }
     .search-count:empty{ display:none; }
   </style>
@@ -1548,34 +1583,35 @@
     if (!tabs || !header || typeof render !== 'function' || typeof getBuckets !== 'function') return;
 
     // ---------- interfaccia ----------
-    const toggle = document.createElement('button');
-    toggle.type = 'button';
-    toggle.className = 'search-toggle';
-    toggle.setAttribute('aria-label', 'Cerca eventi');
-    toggle.setAttribute('aria-expanded', 'false');
-    toggle.innerHTML =
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' +
-      '<circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>';
-    header.appendChild(toggle);
-
-    const panel = document.createElement('div');
-    panel.className = 'search-panel';
-    panel.innerHTML =
-      '<div class="search-row">' +
-        '<div class="search-field">' +
-          '<input class="search-input" id="search-input" type="search" placeholder="Cerca un evento…" ' +
-          'autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Cerca eventi">' +
-          '<button class="search-clear" id="search-clear" type="button" aria-label="Cancella ricerca">✕</button>' +
-        '</div>' +
+    const pill = document.createElement('div');
+    pill.className = 'search-pill';
+    pill.innerHTML =
+      '<button class="search-lens" id="search-lens" type="button" aria-label="Cerca eventi" aria-expanded="false">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' +
+        '<circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>' +
+      '</button>' +
+      '<input class="search-input" id="search-input" type="search" placeholder="Cerca un evento…" ' +
+        'autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Cerca eventi">' +
+      '<label class="search-cal" id="search-cal" title="Scegli un giorno">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+        '<rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/>' +
+        '<line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></svg>' +
+        '<span id="search-cal-label"></span>' +
         '<input class="search-date" id="search-date" type="date" aria-label="Filtra per giorno">' +
-      '</div>' +
-      '<div class="search-count" id="search-count"></div>';
-    tabs.insertAdjacentElement('beforebegin', panel);
+      '</label>' +
+      '<button class="search-clear" id="search-clear" type="button" aria-label="Cancella o chiudi">✕</button>';
+    header.appendChild(pill);
 
+    const count = document.createElement('div');
+    count.className = 'search-count';
+    tabs.insertAdjacentElement('beforebegin', count);
+
+    const lens = document.getElementById('search-lens');
     const input = document.getElementById('search-input');
     const dateInput = document.getElementById('search-date');
+    const calBox = document.getElementById('search-cal');
+    const calLabel = document.getElementById('search-cal-label');
     const clearBtn = document.getElementById('search-clear');
-    const count = document.getElementById('search-count');
     const listEl = document.getElementById('list');
 
     const S = { active: false, lastTab: 'oggi', results: [] };
@@ -1681,12 +1717,22 @@
     }
 
     // ---------- stato ricerca ----------
-    function updateClearBtn() {
-      clearBtn.classList.toggle('visible', !!(input.value || dateInput.value));
+    // mostra la data scelta dentro l'ovale (es. "21 nov"), oppure solo l'icona
+    function updateDateLabel() {
+      const v = dateInput.value;
+      if (v) {
+        const p = v.split('-').map(Number);
+        const d = new Date(p[0], p[1] - 1, p[2]);
+        calLabel.textContent = d.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
+        calBox.classList.add('has-date');
+      } else {
+        calLabel.textContent = '';
+        calBox.classList.remove('has-date');
+      }
     }
 
     function startOrUpdate() {
-      updateClearBtn();
+      updateDateLabel();
       const hasQuery = !!(input.value.trim() || dateInput.value);
       if (!hasQuery) { resetSearch(true); return; }
       if (!S.active) {
@@ -1699,12 +1745,12 @@
       scheduleTrack();
     }
 
-    // svuota i campi e chiude la modalità ricerca; redraw=false: lo ridisegno non serve
+    // svuota i campi e chiude la modalità ricerca; redraw=false: non ridisegno
     // (lo farà il gestore del click che ha causato la chiusura)
     function resetSearch(redraw) {
       input.value = '';
       dateInput.value = '';
-      updateClearBtn();
+      updateDateLabel();
       count.textContent = '';
       if (!S.active) return;
       S.active = false;
@@ -1712,22 +1758,31 @@
       if (redraw) render(inPastView ? 'passati' : S.lastTab);
     }
 
-    // ---------- apertura / chiusura del pannello (lente) ----------
-    function openPanel() {
-      panel.classList.add('open');
-      toggle.classList.add('active');
-      toggle.setAttribute('aria-expanded', 'true');
-      input.focus();
+    // ---------- apertura / chiusura dell'ovale ----------
+    function isOpen() { return pill.classList.contains('open'); }
+    function openPill() {
+      pill.classList.add('open');
+      header.classList.add('search-open');
+      lens.setAttribute('aria-expanded', 'true');
+      // aspetta l'animazione, poi porta il cursore nel campo (apre la tastiera)
+      setTimeout(() => input.focus(), 120);
     }
-    function closePanel(redraw) {
+    function closePill(redraw) {
       resetSearch(redraw);
-      panel.classList.remove('open');
-      toggle.classList.remove('active');
-      toggle.setAttribute('aria-expanded', 'false');
+      pill.classList.remove('open');
+      header.classList.remove('search-open');
+      lens.setAttribute('aria-expanded', 'false');
+      input.blur();
     }
-    toggle.addEventListener('click', () => {
-      if (panel.classList.contains('open')) closePanel(true);
-      else openPanel();
+
+    lens.addEventListener('click', () => {
+      if (!isOpen()) { openPill(); return; }
+      input.focus();
+    });
+    // ✕: se c'è qualcosa scritto/scelto lo cancella, altrimenti richiude l'ovale
+    clearBtn.addEventListener('click', () => {
+      if (input.value || dateInput.value) { resetSearch(true); input.focus(); }
+      else closePill(true);
     });
 
     // ---------- statistiche (Umami) ----------
@@ -1753,24 +1808,26 @@
     // ---------- eventi ----------
     let typeTimer = null;
     input.addEventListener('input', () => {
-      updateClearBtn();
       clearTimeout(typeTimer);
       typeTimer = setTimeout(startOrUpdate, 150);
     });
     dateInput.addEventListener('change', startOrUpdate);
-    clearBtn.addEventListener('click', () => { resetSearch(true); input.focus(); });
+    // su desktop il campo data invisibile si apre solo con questo
+    dateInput.addEventListener('click', () => {
+      try { if (dateInput.showPicker) dateInput.showPicker(); } catch (err) {}
+    });
     input.addEventListener('keydown', (ev) => {
-      if (ev.key === 'Escape') closePanel(true);
+      if (ev.key === 'Escape') closePill(true);
       if (ev.key === 'Enter') input.blur(); // chiude la tastiera sul telefono
     });
 
     // Toccando una scheda (Oggi / Settimana / Prossimamente) o "Cosa mi sono perso"
     // la ricerca si chiude e il gestore esistente fa il resto.
     document.querySelectorAll('.tab').forEach(btn => {
-      btn.addEventListener('click', () => closePanel(false), true);
+      btn.addEventListener('click', () => closePill(false), true);
     });
     const pastBtnEl = document.getElementById('past-btn');
-    if (pastBtnEl) pastBtnEl.addEventListener('click', () => closePanel(false), true);
+    if (pastBtnEl) pastBtnEl.addEventListener('click', () => closePill(false), true);
   })();
   </script>
   <!-- ==== fine blocco ricerca ==== -->
