@@ -1622,10 +1622,15 @@
     //   type 'place' → filtro sul luogo: "re" è confrontata con il luogo
     //                  dell'evento, già in minuscolo e senza accenti
     // ------------------------------------------------------------------
+    // "Cubi" = luoghi con "cubo/cubi" nel nome, il Ponte Pietro Bucci, e le aule con
+    // codice tipo 5C3 o 32B1 (numero + lettera + numero: il numero iniziale è il cubo).
+    // Il codice viene tradotto in "cubo N" da placeKey() più sotto.
+    const CUBI_RE = /\bcub[oi]\b|\bponte\b.*\bbucci\b/;
+
     const CHIPS = [
       { k: 'weekend',        label: 'Weekend',           type: 'time' },
       { k: 'tau',            label: 'TAU',               type: 'place', re: /teatro auditorium|\btau\b/ },
-      { k: 'cubi',           label: 'Cubi',              type: 'place', re: /\bcub[oi]\b/ },
+      { k: 'cubi',           label: 'Cubi',              type: 'place', re: CUBI_RE },
       { k: 'aulamagna',      label: 'Aula Magna',        type: 'place', re: /aula magna/ },
       { k: 'online',         label: 'Online',            type: 'place', re: /\bonline\b/ },
       { k: 'vermicelli',     label: 'Piazza Vermicelli', type: 'place', re: /vermicelli/ },
@@ -1636,8 +1641,8 @@
     // "Teatro Auditorium Unical" (ma NON il Piccolo Teatro), "cubo" e "cubi" sono lo stesso.
     const SYNONYMS = {
       tau:  /\btau\b|teatro auditorium/,
-      cubo: /\bcub[oi]\b/,
-      cubi: /\bcub[oi]\b/,
+      cubo: CUBI_RE,
+      cubi: CUBI_RE,
     };
 
     const tabs = document.getElementById('tabs');
@@ -1701,11 +1706,18 @@
     function dayStart(d) {
       return new Date(d.getFullYear(), d.getMonth(), d.getDate());
     }
+    // Luogo normalizzato + il cubo ricavato dal codice aula:
+    // "Aula 5C3" → "aula 5c3 cubo 5", "Aula consolidata 32B1" → "... cubo 32"
+    function placeKey(e) {
+      const p = norm(stripTags(e.place));
+      const m = p.match(/\b(\d{1,2})[a-d]\d{1,2}\b/);
+      return m && !/\bcub[oi]\b/.test(p) ? p + ' cubo ' + m[1] : p;
+    }
     function haystack(e) {
       const subs = (e.sub_events || [])
         .map(x => [x.title, x.place, x.description].join(' '))
         .join(' ');
-      return norm(stripTags([e.title, e.description, e.place, subs].join(' ')));
+      return norm(stripTags([e.title, e.description, subs].join(' '))) + ' ' + placeKey(e);
     }
     // una parola scritta dall'utente → funzione che dice se un testo la contiene
     function wordMatcher(w) {
@@ -1741,7 +1753,7 @@
         } else if (e.dateObj < startWeekAgo) {
           return false; // senza data scelta: da 7 giorni fa in avanti
         }
-        if (S.place && !S.place.re.test(norm(e.place))) return false;
+        if (S.place && !S.place.re.test(placeKey(e))) return false;
         if (matchers.length) {
           const h = haystack(e);
           if (!matchers.every(m => m(h))) return false;
@@ -1753,7 +1765,7 @@
       function score(e) {
         if (!matchers.length) return 0;
         const t = norm(stripTags(e.title));
-        const p = norm(stripTags(e.place));
+        const p = placeKey(e);
         let s = 0;
         matchers.forEach(m => { s += m(t) ? 3 : (m(p) ? 2 : 1); });
         return s;
