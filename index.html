@@ -1449,5 +1449,746 @@
   })();
   </script>
   <!-- ==== fine blocco locandine ==== -->
+  <!-- ==== RICERCA: lente che si allarga in un ovale (stile Google) → testo + giorno + luoghi (incollato prima di </body>) ==== -->
+  <style>
+    header{ position:relative; }
+
+    /* Ovale in alto a destra: chiuso è un cerchio con la lente,
+       aperto si allarga verso sinistra e mostra "Cerca un evento…" */
+    .search-pill{
+      position:absolute;
+      top:-3px;
+      right:0;
+      z-index:5;
+      width:40px;
+      height:40px;
+      display:flex;
+      align-items:center;
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:100px;
+      overflow:hidden;
+      transition:width 0.28s ease, border-color 0.2s ease;
+    }
+    .search-pill:hover{ border-color:var(--muted); }
+    .search-pill.open{
+      width:100%;
+      border-color:var(--ink);
+    }
+    .search-lens{
+      flex-shrink:0;
+      width:38px;
+      height:38px;
+      border:none;
+      background:none;
+      color:var(--ink);
+      padding:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+    }
+    .search-lens svg{ width:19px; height:19px; display:block; }
+
+    .search-input{
+      flex:1;
+      min-width:0;
+      height:38px;
+      border:none;
+      outline:none;
+      background:transparent;
+      font-family:'Inter',sans-serif;
+      font-size:16px; /* 16px evita lo zoom automatico su iPhone */
+      color:var(--ink);
+      padding:0 4px 0 0;
+      -webkit-appearance:none;
+      appearance:none;
+    }
+    .search-input::-webkit-search-cancel-button{ display:none; }
+
+    /* giorno: icona calendario (o la data scelta); sopra c'è il vero campo data, invisibile */
+    .search-cal{
+      position:relative;
+      flex-shrink:0;
+      height:30px;
+      min-width:30px;
+      padding:0 8px;
+      margin-right:2px;
+      border-radius:100px;
+      color:var(--muted);
+      font-size:13px;
+      font-weight:600;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:5px;
+      white-space:nowrap;
+    }
+    .search-cal svg{ width:16px; height:16px; display:block; flex-shrink:0; }
+    .search-cal.has-date{
+      background:var(--red);
+      color:#fff;
+    }
+    .search-date{
+      position:absolute;
+      top:0; left:0;
+      width:100%;
+      height:100%;
+      opacity:0;
+      font-size:16px;
+      cursor:pointer;
+      border:none;
+      padding:0;
+    }
+
+    .search-clear{
+      flex-shrink:0;
+      width:30px;
+      height:30px;
+      margin-right:5px;
+      border:none;
+      border-radius:50%;
+      background:var(--line);
+      color:var(--ink);
+      font-size:12px;
+      line-height:1;
+      cursor:pointer;
+    }
+
+    /* da chiuso, tutto tranne la lente è nascosto (e non raggiungibile con Tab) */
+    .search-pill:not(.open) .search-input,
+    .search-pill:not(.open) .search-cal,
+    .search-pill:not(.open) .search-clear{
+      visibility:hidden;
+    }
+
+    /* mentre la ricerca è aperta il logo lascia spazio all'ovale */
+    header .logo{ transition:opacity 0.2s ease; }
+    header.search-open .logo{ opacity:0; pointer-events:none; }
+
+    .search-count{
+      font-size:13px;
+      color:var(--muted);
+      margin:-8px 2px 14px;
+    }
+    .search-count:empty{ display:none; }
+
+    /* scorciatoie: Weekend + luoghi. Una sola riga che scorre di lato col dito */
+    .search-chips{
+      display:none;
+      gap:8px;
+      margin:-6px -20px 14px;   /* esce dai margini della pagina così lo scorrimento arriva al bordo */
+      padding:0 20px 2px;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
+    }
+    .search-chips::-webkit-scrollbar{ display:none; }
+    .search-chips.show{ display:flex; }
+    .search-chip{
+      flex-shrink:0;
+      background:none;
+      border:1px solid var(--line);
+      color:var(--ink);
+      font-family:'Inter',sans-serif;
+      font-size:13px;
+      font-weight:600;
+      padding:6px 14px;
+      border-radius:100px;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+    .search-chip:hover{ border-color:var(--muted); }
+    .search-chip.active{
+      background:var(--ink);
+      border-color:var(--ink);
+      color:var(--paper);
+    }
+    /* parola cercata, evidenziata nei risultati */
+    mark.search-hit{
+      background:#FFE98A;
+      color:inherit;
+      border-radius:2px;
+      padding:0 1px;
+    }
+    .search-chip-sep{
+      flex-shrink:0;
+      width:1px;
+      background:var(--line);
+      margin:2px 2px;
+    }
+  </style>
+  <script>
+  (function () {
+    // Metti false se NON vuoi registrare su Umami cosa cercano le persone
+    const TRACK_SEARCHES = true;
+
+    // ------------------------------------------------------------------
+    // PILLOLE: per aggiungerne o toglierne basta modificare questo elenco.
+    //   type 'time'  → filtro sul tempo
+    //   type 'place' → filtro sul luogo: "re" è confrontata con il luogo
+    //                  dell'evento, già in minuscolo e senza accenti
+    // ------------------------------------------------------------------
+    // "Cubi" = luoghi con "cubo/cubi" nel nome, il Ponte Pietro Bucci, e le aule con
+    // codice tipo 5C3 o 32B1 (numero + lettera + numero: il numero iniziale è il cubo).
+    // Il codice viene tradotto in "cubo N" da placeKey() più sotto.
+    const CUBI_RE = /\bcub[oi]\b|\bponte\b.*\bbucci\b/;
+
+    const CHIPS = [
+      { k: 'weekend',        label: 'Weekend',           type: 'time' },
+      { k: 'tau',            label: 'TAU',               type: 'place', re: /teatro auditorium|\btau\b/ },
+      { k: 'cubi',           label: 'Cubi',              type: 'place', re: CUBI_RE },
+      { k: 'aulamagna',      label: 'Aula Magna',        type: 'place', re: /aula magna/ },
+      { k: 'online',         label: 'Online',            type: 'place', re: /\bonline\b/ },
+      { k: 'vermicelli',     label: 'Piazza Vermicelli', type: 'place', re: /vermicelli/ },
+      { k: 'universityclub', label: 'University Club',   type: 'place', re: /university club/ },
+    ];
+
+    // Sinonimi per il testo scritto nella barra: chi scrive "tau" trova anche
+    // "Teatro Auditorium Unical" (ma NON il Piccolo Teatro), "cubo" e "cubi" sono lo stesso.
+    const SYNONYMS = {
+      tau:  /\btau\b|teatro auditorium/,
+      cubo: CUBI_RE,
+      cubi: CUBI_RE,
+    };
+
+    // Come evidenziare i sinonimi nel testo dei risultati (versione più corta, senza "ponte bucci")
+    const HILITE = {
+      tau:  /\btau\b|teatro auditorium/,
+      cubo: /\bcub[oi]\b/,
+      cubi: /\bcub[oi]\b/,
+    };
+
+    // ------------------------------------------------------------------
+    // "PORTAMI LÌ": luoghi per cui la card mostra il pulsante del navigatore.
+    //   re  → confrontata con il luogo dell'evento (minuscolo, senza accenti)
+    //   q   → testo cercato su Google Maps / Apple Maps
+    //   lat, lng (facoltativi) → se un luogo non viene trovato bene dal nome, metti le
+    //                            coordinate precise qui e vengono usate al posto di q
+    // I luoghi non elencati (cubi, aule, online…) non hanno il pulsante.
+    // ------------------------------------------------------------------
+    const NAV = [
+      { re: /teatro auditorium|\btau\b/,       q: 'Teatro Auditorium Unical, Arcavacata di Rende' },
+      { re: /piccolo teatro/,                  q: 'Piccolo Teatro Unical, Arcavacata di Rende' },
+      { re: /aula magna/,                      q: 'Aula Magna, Università della Calabria, Arcavacata di Rende' },
+      { re: /university club/,                q: 'University Club, Università della Calabria, Arcavacata di Rende' },
+      { re: /centro congressi/,                q: 'Centro Congressi, Università della Calabria, Arcavacata di Rende' },
+      { re: /vermicelli/,                      q: 'Piazza Vermicelli, Università della Calabria, Arcavacata di Rende' },
+      { re: /\bponte\b.*\bbucci\b/,            q: 'Ponte Pietro Bucci, Università della Calabria, Arcavacata di Rende' },
+      { re: /polifunzionale/,                  q: 'Polifunzionale, Università della Calabria, Arcavacata di Rende' },
+      { re: /cinema campus/,                   q: 'Cinema Campus, Università della Calabria, Arcavacata di Rende' },
+      { re: /rimuseum/,                        q: 'RiMuseum, Università della Calabria, Arcavacata di Rende' },
+    ];
+
+    const tabs = document.getElementById('tabs');
+    const header = document.querySelector('header');
+    if (!tabs || !header || typeof render !== 'function' || typeof getBuckets !== 'function') return;
+
+    // ---------- interfaccia ----------
+    const pill = document.createElement('div');
+    pill.className = 'search-pill';
+    pill.innerHTML =
+      '<button class="search-lens" id="search-lens" type="button" aria-label="Cerca eventi" aria-expanded="false">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' +
+        '<circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>' +
+      '</button>' +
+      '<input class="search-input" id="search-input" type="search" placeholder="Cerca un evento…" ' +
+        'autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Cerca eventi">' +
+      '<label class="search-cal" id="search-cal" title="Scegli un giorno">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+        '<rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/>' +
+        '<line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></svg>' +
+        '<span id="search-cal-label"></span>' +
+        '<input class="search-date" id="search-date" type="date" aria-label="Filtra per giorno">' +
+      '</label>' +
+      '<button class="search-clear" id="search-clear" type="button" aria-label="Cancella o chiudi">✕</button>';
+    header.appendChild(pill);
+
+    const count = document.createElement('div');
+    count.className = 'search-count';
+    tabs.insertAdjacentElement('beforebegin', count);
+
+    const chips = document.createElement('div');
+    chips.className = 'search-chips';
+    chips.innerHTML = CHIPS.map((c, i) =>
+      '<button type="button" class="search-chip" data-k="' + c.k + '">' + c.label + '</button>' +
+      (i === 0 ? '<div class="search-chip-sep"></div>' : '')
+    ).join('');
+    count.insertAdjacentElement('beforebegin', chips);
+
+    const lens = document.getElementById('search-lens');
+    const input = document.getElementById('search-input');
+    const dateInput = document.getElementById('search-date');
+    const calBox = document.getElementById('search-cal');
+    const calLabel = document.getElementById('search-cal-label');
+    const clearBtn = document.getElementById('search-clear');
+    const listEl = document.getElementById('list');
+
+    // quick = intervallo di giorni (Weekend), place = pillola di luogo attiva
+    const S = { active: false, lastTab: 'oggi', results: [], quick: null, place: null };
+
+    // ---------- utilità ----------
+    // minuscole e senza accenti: "universita" trova "università"
+    function norm(s) {
+      return String(s || '')
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .toLowerCase();
+    }
+    function stripTags(s) {
+      return String(s || '').replace(/<[^>]*>/g, ' ');
+    }
+    function dayStart(d) {
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    }
+    // Luogo normalizzato + il cubo ricavato dal codice aula:
+    // "Aula 5C3" → "aula 5c3 cubo 5", "Aula consolidata 32B1" → "... cubo 32"
+    function placeKey(e) {
+      const p = norm(stripTags(e.place));
+      const m = p.match(/\b(\d{1,2})[a-d]\d{1,2}\b/);
+      return m && !/\bcub[oi]\b/.test(p) ? p + ' cubo ' + m[1] : p;
+    }
+    function haystack(e) {
+      const subs = (e.sub_events || [])
+        .map(x => [x.title, x.place, x.description].join(' '))
+        .join(' ');
+      return norm(stripTags([e.title, e.description, subs].join(' '))) + ' ' + placeKey(e);
+    }
+    // una parola scritta dall'utente → funzione che dice se un testo la contiene
+    function wordMatcher(w) {
+      const re = SYNONYMS[w];
+      return re ? (text => re.test(text)) : (text => text.includes(w));
+    }
+
+    // distanza di modifica tra due parole (conta come 1 anche lo scambio di due lettere:
+    // "taetro" → "teatro" = 1)
+    function editDist(a, b) {
+      const al = a.length, bl = b.length;
+      const d = [];
+      for (let i = 0; i <= al; i++) { d[i] = [i]; }
+      for (let j = 0; j <= bl; j++) { d[0][j] = j; }
+      for (let i = 1; i <= al; i++) {
+        for (let j = 1; j <= bl; j++) {
+          const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+          d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost);
+          if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+            d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+          }
+        }
+      }
+      return d[al][bl];
+    }
+    // versione "tollerante": usata solo se la ricerca esatta non trova niente.
+    // Parole corte (< 4 lettere) e sinonimi restano esatti.
+    function fuzzyMatcher(w) {
+      if (w.length < 4 || SYNONYMS[w]) return wordMatcher(w);
+      const maxd = w.length >= 8 ? 2 : 1;
+      return text => {
+        if (text.includes(w)) return true;
+        return text.split(/[^a-z0-9]+/).some(tok =>
+          Math.abs(tok.length - w.length) <= maxd && editDist(tok, w) <= maxd);
+      };
+    }
+
+    function computeResults() {
+      const words = norm(input.value).split(/\s+/).filter(Boolean);
+      let matchers = words.map(wordMatcher);
+      S.fuzzy = false;
+      const dateVal = dateInput.value; // "YYYY-MM-DD" oppure ""
+      const now = new Date();
+      const startToday = dayStart(now);
+      const startWeekAgo = new Date(startToday);
+      startWeekAgo.setDate(startToday.getDate() - 7);
+
+      // intervallo di giorni richiesto: un giorno scelto, oppure il weekend
+      let from = null, to = null;
+      if (dateVal) {
+        const p = dateVal.split('-').map(Number);
+        from = to = new Date(p[0], p[1] - 1, p[2]);
+      } else if (S.quick) {
+        from = S.quick.from;
+        to = S.quick.to;
+      }
+
+      function findWith(ms) { return events.filter(e => {
+        if (from) {
+          // l'evento tocca l'intervallo (anche se dura più giorni)
+          const s = dayStart(e.dateObj);
+          const en = e.endDateObj ? dayStart(e.endDateObj) : s;
+          if (to < s || from > en) return false;
+        } else if (e.dateObj < startWeekAgo) {
+          return false; // senza data scelta: da 7 giorni fa in avanti
+        }
+        if (S.place && !S.place.re.test(placeKey(e))) return false;
+        if (ms.length) {
+          const h = haystack(e);
+          if (!ms.every(m => m(h))) return false;
+        }
+        return true;
+      }); }
+
+      let found = findWith(matchers);
+      // nessun risultato esatto? riprova tollerando piccoli errori di battitura
+      if (!found.length && words.some(w => w.length >= 4)) {
+        const fz = words.map(fuzzyMatcher);
+        const alt = findWith(fz);
+        if (alt.length) { found = alt; matchers = fz; S.fuzzy = true; }
+      }
+
+      // rilevanza: parola nel titolo (3) > nel luogo (2) > solo in descrizione/programma (1)
+      function score(e) {
+        if (!matchers.length) return 0;
+        const t = norm(stripTags(e.title));
+        const p = placeKey(e);
+        let s = 0;
+        matchers.forEach(m => { s += m(t) ? 3 : (m(p) ? 2 : 1); });
+        return s;
+      }
+      const scores = new Map(found.map(e => [e, score(e)]));
+
+      // Due gruppi che non si mescolano mai: prima i futuri, poi i passati in fondo.
+      // Dentro ciascun gruppo: più rilevanti per primi, a parità per data.
+      const upcoming = found.filter(e => e.dateObj >= startToday)
+        .sort((a, b) => (scores.get(b) - scores.get(a)) || (a.dateObj - b.dateObj));
+      const past = found.filter(e => e.dateObj < startToday)
+        .sort((a, b) => (scores.get(b) - scores.get(a)) || (b.dateObj - a.dateObj));
+      return upcoming.concat(past);
+    }
+
+    // ---------- aggancio al render esistente (senza modificarlo) ----------
+    const origGetBuckets = window.getBuckets;
+    window.getBuckets = function () {
+      const b = origGetBuckets();
+      b.cerca = S.active ? computeResults() : [];
+      S.results = b.cerca;
+      return b;
+    };
+
+    if (typeof emptyMessages === 'object') {
+      emptyMessages.cerca = { text: 'Nessun evento trovato. Prova con un’altra parola o un altro giorno.', jump: null, cta: null };
+    }
+
+    const origRender = window.render;
+    window.render = function (tab) {
+      if (S.active && tab !== 'cerca') tab = 'cerca';
+      origRender(tab);
+      if (tab === 'cerca') afterSearchRender();
+      addNavButtons(); // vale per tutte le schede, non solo per la ricerca
+    };
+
+    // ---------- pulsante "Portami lì" ----------
+    const NAV_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>';
+
+    function navFor(e) {
+      const p = norm(stripTags(e.place));
+      if (!p || /altri luoghi|mappa|\bonline\b/.test(p)) return null;
+      return NAV.find(n => n.re.test(p)) || null;
+    }
+    function isApple() {
+      return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    }
+    function navUrl(n) {
+      const dest = (n.lat != null && n.lng != null) ? n.lat + ',' + n.lng : n.q;
+      return isApple()
+        ? 'https://maps.apple.com/?daddr=' + encodeURIComponent(dest)
+        : 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(dest);
+    }
+    function addNavButtons() {
+      listEl.querySelectorAll('.card').forEach(card => {
+        if (card.querySelector('.nav-btn')) return;
+        const ev = events.find(x => String(x.id) === card.dataset.eventId);
+        const n = ev && navFor(ev);
+        const holder = card.querySelector('.card-action-buttons');
+        if (!n || !holder) return;
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'share-btn nav-btn'; // stesso aspetto del pulsante condividi
+        b.title = 'Portami lì';
+        b.setAttribute('aria-label', 'Portami lì');
+        b.innerHTML = NAV_ICON;
+        b.addEventListener('click', (evt) => {
+          evt.stopPropagation();
+          try { if (typeof track === 'function') track('click_portami_li', { evento: ev.title, luogo: ev.place }); } catch (err) {}
+          window.open(navUrl(n), '_blank', 'noopener');
+        });
+        holder.insertBefore(b, holder.firstChild);
+      });
+    }
+
+    function afterSearchRender() {
+      const now = new Date();
+      // niente "Ricordamelo" per eventi già conclusi
+      listEl.querySelectorAll('.card').forEach(card => {
+        const ev = events.find(x => String(x.id) === card.dataset.eventId);
+        if (ev && isElapsed(ev, now)) {
+          const rb = card.querySelector('.remind-btn');
+          if (rb) rb.remove();
+        }
+      });
+      // riga "Già passati" tra i futuri e i passati (solo se ci sono entrambi)
+      const startToday = dayStart(now);
+      const cards = Array.from(listEl.querySelectorAll('.card'));
+      const firstPast = cards.find(card => {
+        const ev = events.find(x => String(x.id) === card.dataset.eventId);
+        return ev && ev.dateObj < startToday;
+      });
+      if (firstPast && firstPast !== cards[0]) {
+        const sep = document.createElement('div');
+        sep.className = 'day-separator';
+        sep.textContent = 'Già passati';
+        firstPast.parentNode.insertBefore(sep, firstPast);
+      }
+      // nessun risultato: aggiungi il tasto per cancellare
+      const empty = listEl.querySelector('.empty');
+      if (empty && !empty.querySelector('button')) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = 'Cancella la ricerca';
+        b.addEventListener('click', () => { resetSearch(true); input.focus(); });
+        empty.appendChild(b);
+      }
+      const n = S.results.length;
+      count.textContent = (n === 1 ? '1 evento trovato' : n + ' eventi trovati')
+        + (S.fuzzy ? ' · risultati simili a quello che hai scritto' : '');
+      highlightHits();
+    }
+
+    // ---------- evidenziazione delle parole cercate ----------
+    function highlightHits() {
+      const words = norm(input.value).split(/\s+/).filter(Boolean);
+      if (!words.length) return;
+      const regs = words.map(w => HILITE[w]
+        ? new RegExp(HILITE[w].source, 'g')
+        : new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'));
+      listEl.querySelectorAll('.card-title, .card-place, .card-description, .sub-name, .sub-place, .sub-desc')
+        .forEach(el => markIn(el, regs));
+    }
+
+    // Cerca nei nodi di testo di un elemento (senza toccare l'HTML) e avvolge le parole
+    // trovate in <mark>. Ignora maiuscole e accenti come fa la ricerca.
+    function markIn(el, regs) {
+      const nodes = [];
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+
+      nodes.forEach(node => {
+        const t = node.nodeValue;
+        let n = '';
+        const map = []; // posizione nel testo normalizzato → posizione nel testo originale
+        for (let i = 0; i < t.length; i++) {
+          const c = t[i].normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+          for (const ch of c) { n += ch; map.push(i); }
+        }
+
+        const ranges = [];
+        regs.forEach(re => {
+          re.lastIndex = 0;
+          let m;
+          while ((m = re.exec(n)) !== null) {
+            if (m[0].length === 0) { re.lastIndex++; continue; }
+            ranges.push([map[m.index], map[m.index + m[0].length - 1] + 1]);
+          }
+        });
+        if (!ranges.length) return;
+
+        // unisce gli intervalli che si sovrappongono
+        ranges.sort((a, b) => a[0] - b[0]);
+        const merged = [ranges[0].slice()];
+        for (let i = 1; i < ranges.length; i++) {
+          const last = merged[merged.length - 1];
+          if (ranges[i][0] <= last[1]) last[1] = Math.max(last[1], ranges[i][1]);
+          else merged.push(ranges[i].slice());
+        }
+
+        const frag = document.createDocumentFragment();
+        let pos = 0;
+        merged.forEach(([s, e]) => {
+          if (s > pos) frag.appendChild(document.createTextNode(t.slice(pos, s)));
+          const mk = document.createElement('mark');
+          mk.className = 'search-hit';
+          mk.textContent = t.slice(s, e);
+          frag.appendChild(mk);
+          pos = e;
+        });
+        if (pos < t.length) frag.appendChild(document.createTextNode(t.slice(pos)));
+        node.parentNode.replaceChild(frag, node);
+      });
+    }
+
+    // ---------- stato ricerca ----------
+    // mostra la data scelta dentro l'ovale (es. "21 nov"), oppure solo l'icona
+    function updateDateLabel() {
+      const v = dateInput.value;
+      if (v) {
+        const p = v.split('-').map(Number);
+        const d = new Date(p[0], p[1] - 1, p[2]);
+        calLabel.textContent = d.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
+        calBox.classList.add('has-date');
+      } else {
+        calLabel.textContent = '';
+        calBox.classList.remove('has-date');
+      }
+    }
+
+    // evidenzia le pillole attive
+    function updateChips() {
+      chips.querySelectorAll('.search-chip').forEach(btn => {
+        const k = btn.dataset.k;
+        const on = (k === 'weekend' && !!S.quick) || (!!S.place && S.place.k === k);
+        btn.classList.toggle('active', on);
+      });
+    }
+
+    function hasFilters() {
+      return !!(input.value.trim() || dateInput.value || S.quick || S.place);
+    }
+
+    // intervallo del prossimo weekend (sabato e domenica; se è già weekend, da oggi)
+    function weekendRange() {
+      const t = dayStart(new Date());
+      const add = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+      const dow = t.getDay(); // 0 = domenica, 6 = sabato
+      if (dow === 6) return { from: t, to: add(t, 1) };
+      if (dow === 0) return { from: t, to: t };
+      const sat = add(t, 6 - dow);
+      return { from: sat, to: add(sat, 1) };
+    }
+
+    chips.addEventListener('click', (ev) => {
+      const btn = ev.target.closest('.search-chip');
+      if (!btn) return;
+      const cfg = CHIPS.find(c => c.k === btn.dataset.k);
+      if (!cfg) return;
+      let activated;
+      if (cfg.type === 'time') {
+        activated = !S.quick;
+        S.quick = activated ? weekendRange() : null;
+        if (activated) dateInput.value = ''; // il weekend sostituisce il giorno scelto a mano
+      } else {
+        activated = !(S.place && S.place.k === cfg.k);
+        S.place = activated ? cfg : null; // una pillola di luogo alla volta
+      }
+      if (activated && TRACK_SEARCHES) {
+        try { if (typeof track === 'function') track('cerca_scorciatoia', { quale: cfg.k }); } catch (err) {}
+      }
+      startOrUpdate();
+    });
+
+    function startOrUpdate() {
+      updateDateLabel();
+      updateChips();
+      if (!hasFilters()) { resetSearch(true); return; }
+      if (!S.active) {
+        S.active = true;
+        const cur = document.querySelector('.tab.active');
+        if (cur) S.lastTab = cur.dataset.tab;
+        tabs.style.display = 'none';
+      }
+      render('cerca');
+      scheduleTrack();
+    }
+
+    // svuota tutto e chiude la modalità ricerca; redraw=false: non ridisegno
+    // (lo farà il gestore del click che ha causato la chiusura)
+    function resetSearch(redraw) {
+      input.value = '';
+      dateInput.value = '';
+      S.quick = null;
+      S.place = null;
+      updateDateLabel();
+      updateChips();
+      count.textContent = '';
+      if (!S.active) return;
+      S.active = false;
+      if (!inPastView) tabs.style.display = 'flex';
+      if (redraw) render(inPastView ? 'passati' : S.lastTab);
+    }
+
+    // ---------- apertura / chiusura dell'ovale ----------
+    function isOpen() { return pill.classList.contains('open'); }
+    function openPill() {
+      pill.classList.add('open');
+      chips.classList.add('show');
+      header.classList.add('search-open');
+      lens.setAttribute('aria-expanded', 'true');
+      // aspetta l'animazione, poi porta il cursore nel campo (apre la tastiera)
+      setTimeout(() => input.focus(), 120);
+    }
+    function closePill(redraw) {
+      resetSearch(redraw);
+      pill.classList.remove('open');
+      chips.classList.remove('show');
+      header.classList.remove('search-open');
+      lens.setAttribute('aria-expanded', 'false');
+      input.blur();
+    }
+
+    lens.addEventListener('click', () => {
+      if (!isOpen()) { openPill(); return; }
+      input.focus();
+    });
+    // ✕: se c'è qualcosa scritto/scelto lo cancella, altrimenti richiude l'ovale
+    clearBtn.addEventListener('click', () => {
+      if (hasFilters()) { resetSearch(true); input.focus(); }
+      else closePill(true);
+    });
+
+    // ---------- statistiche (Umami) ----------
+    let trackTimer = null;
+    let lastTracked = '';
+    function scheduleTrack() {
+      if (!TRACK_SEARCHES) return;
+      clearTimeout(trackTimer);
+      trackTimer = setTimeout(() => {
+        const q = norm(input.value).trim();
+        const d = dateInput.value;
+        const key = q + '|' + d;
+        if ((q.length < 2 && !d) || key === lastTracked) return;
+        lastTracked = key;
+        try {
+          if (typeof track === 'function') {
+            track('cerca', { testo: q || '(solo data)', data: d || '', risultati: S.results.length });
+          }
+        } catch (err) {}
+      }, 1500);
+    }
+
+    // ---------- eventi ----------
+    let typeTimer = null;
+    input.addEventListener('input', () => {
+      clearTimeout(typeTimer);
+      typeTimer = setTimeout(startOrUpdate, 150);
+    });
+    dateInput.addEventListener('change', () => {
+      if (dateInput.value) S.quick = null; // il giorno scelto a mano sostituisce il weekend
+      startOrUpdate();
+    });
+    // su desktop il campo data invisibile si apre solo con questo
+    dateInput.addEventListener('click', () => {
+      try { if (dateInput.showPicker) dateInput.showPicker(); } catch (err) {}
+    });
+    // Toccando fuori dall'ovale, se è vuoto (niente scritto né scelto), si richiude da solo.
+    // Se c'è una ricerca in corso non lo tocca, così i risultati restano.
+    document.addEventListener('click', (ev) => {
+      if (!isOpen() || hasFilters()) return;
+      if (pill.contains(ev.target) || chips.contains(ev.target)) return;
+      closePill(true);
+    });
+    input.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape') closePill(true);
+      if (ev.key === 'Enter') input.blur(); // chiude la tastiera sul telefono
+    });
+
+    // Toccando una scheda (Oggi / Settimana / Prossimamente) o "Cosa mi sono perso"
+    // la ricerca si chiude e il gestore esistente fa il resto.
+    document.querySelectorAll('.tab').forEach(btn => {
+      btn.addEventListener('click', () => closePill(false), true);
+    });
+    const pastBtnEl = document.getElementById('past-btn');
+    if (pastBtnEl) pastBtnEl.addEventListener('click', () => closePill(false), true);
+  })();
+  </script>
+  <!-- ==== fine blocco ricerca ==== -->
 </body>
 </html>
