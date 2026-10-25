@@ -1449,12 +1449,41 @@
   })();
   </script>
   <!-- ==== fine blocco locandine ==== -->
-  <!-- ==== RICERCA: titolo / descrizione / luogo + giorno (incollato prima di </body>) ==== -->
+  <!-- ==== RICERCA: lente accanto al logo → titolo / descrizione / luogo + giorno (incollato prima di </body>) ==== -->
   <style>
+    header{ position:relative; }
+
+    /* lente di ingrandimento, a destra del logo */
+    .search-toggle{
+      position:absolute;
+      top:-3px;
+      right:0;
+      width:40px;
+      height:40px;
+      border-radius:50%;
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--ink);
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:0;
+    }
+    .search-toggle:hover{ border-color:var(--muted); }
+    .search-toggle.active{
+      background:var(--ink);
+      border-color:var(--ink);
+      color:var(--paper);
+    }
+    .search-toggle svg{ width:19px; height:19px; display:block; }
+
+    /* pannello: compare solo dopo aver toccato la lente */
+    .search-panel{ display:none; margin-bottom:14px; }
+    .search-panel.open{ display:block; }
     .search-row{
       display:flex;
       gap:8px;
-      margin-bottom:12px;
     }
     .search-field{
       position:relative;
@@ -1505,8 +1534,7 @@
     .search-count{
       font-size:13px;
       color:var(--muted);
-      margin:-4px 2px 14px;
-      min-height:0;
+      margin:8px 2px 0;
     }
     .search-count:empty{ display:none; }
   </style>
@@ -1516,26 +1544,38 @@
     const TRACK_SEARCHES = true;
 
     const tabs = document.getElementById('tabs');
-    if (!tabs || typeof render !== 'function' || typeof getBuckets !== 'function') return;
+    const header = document.querySelector('header');
+    if (!tabs || !header || typeof render !== 'function' || typeof getBuckets !== 'function') return;
 
     // ---------- interfaccia ----------
-    const row = document.createElement('div');
-    row.className = 'search-row';
-    row.innerHTML =
-      '<div class="search-field">' +
-        '<input class="search-input" id="search-input" type="search" placeholder="Cerca un evento…" ' +
-        'autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Cerca eventi">' +
-        '<button class="search-clear" id="search-clear" type="button" aria-label="Cancella ricerca">✕</button>' +
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'search-toggle';
+    toggle.setAttribute('aria-label', 'Cerca eventi');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.innerHTML =
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' +
+      '<circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>';
+    header.appendChild(toggle);
+
+    const panel = document.createElement('div');
+    panel.className = 'search-panel';
+    panel.innerHTML =
+      '<div class="search-row">' +
+        '<div class="search-field">' +
+          '<input class="search-input" id="search-input" type="search" placeholder="Cerca un evento…" ' +
+          'autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Cerca eventi">' +
+          '<button class="search-clear" id="search-clear" type="button" aria-label="Cancella ricerca">✕</button>' +
+        '</div>' +
+        '<input class="search-date" id="search-date" type="date" aria-label="Filtra per giorno">' +
       '</div>' +
-      '<input class="search-date" id="search-date" type="date" aria-label="Filtra per giorno">';
-    const count = document.createElement('div');
-    count.className = 'search-count';
-    tabs.insertAdjacentElement('beforebegin', row);
-    tabs.insertAdjacentElement('beforebegin', count);
+      '<div class="search-count" id="search-count"></div>';
+    tabs.insertAdjacentElement('beforebegin', panel);
 
     const input = document.getElementById('search-input');
     const dateInput = document.getElementById('search-date');
     const clearBtn = document.getElementById('search-clear');
+    const count = document.getElementById('search-count');
     const listEl = document.getElementById('list');
 
     const S = { active: false, lastTab: 'oggi', results: [] };
@@ -1545,7 +1585,7 @@
     function norm(s) {
       return String(s || '')
         .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[̀-ͯ]/g, '')
         .toLowerCase();
     }
     function stripTags(s) {
@@ -1607,7 +1647,7 @@
     };
 
     if (typeof emptyMessages === 'object') {
-      emptyMessages.cerca = { text: 'Nessun evento trovato. Prova con un\u2019altra parola o un altro giorno.', jump: null, cta: null };
+      emptyMessages.cerca = { text: 'Nessun evento trovato. Prova con un’altra parola o un altro giorno.', jump: null, cta: null };
     }
 
     const origRender = window.render;
@@ -1633,7 +1673,7 @@
         const b = document.createElement('button');
         b.type = 'button';
         b.textContent = 'Cancella la ricerca';
-        b.addEventListener('click', () => resetSearch(true));
+        b.addEventListener('click', () => { resetSearch(true); input.focus(); });
         empty.appendChild(b);
       }
       const n = S.results.length;
@@ -1659,7 +1699,8 @@
       scheduleTrack();
     }
 
-    // silent=false: chiude la ricerca senza ridisegnare (lo farà il gestore del click)
+    // svuota i campi e chiude la modalità ricerca; redraw=false: lo ridisegno non serve
+    // (lo farà il gestore del click che ha causato la chiusura)
     function resetSearch(redraw) {
       input.value = '';
       dateInput.value = '';
@@ -1670,6 +1711,24 @@
       if (!inPastView) tabs.style.display = 'flex';
       if (redraw) render(inPastView ? 'passati' : S.lastTab);
     }
+
+    // ---------- apertura / chiusura del pannello (lente) ----------
+    function openPanel() {
+      panel.classList.add('open');
+      toggle.classList.add('active');
+      toggle.setAttribute('aria-expanded', 'true');
+      input.focus();
+    }
+    function closePanel(redraw) {
+      resetSearch(redraw);
+      panel.classList.remove('open');
+      toggle.classList.remove('active');
+      toggle.setAttribute('aria-expanded', 'false');
+    }
+    toggle.addEventListener('click', () => {
+      if (panel.classList.contains('open')) closePanel(true);
+      else openPanel();
+    });
 
     // ---------- statistiche (Umami) ----------
     let trackTimer = null;
@@ -1699,19 +1758,19 @@
       typeTimer = setTimeout(startOrUpdate, 150);
     });
     dateInput.addEventListener('change', startOrUpdate);
-    clearBtn.addEventListener('click', () => { resetSearch(true); input.blur(); });
+    clearBtn.addEventListener('click', () => { resetSearch(true); input.focus(); });
     input.addEventListener('keydown', (ev) => {
-      if (ev.key === 'Escape') resetSearch(true);
+      if (ev.key === 'Escape') closePanel(true);
       if (ev.key === 'Enter') input.blur(); // chiude la tastiera sul telefono
     });
 
     // Toccando una scheda (Oggi / Settimana / Prossimamente) o "Cosa mi sono perso"
     // la ricerca si chiude e il gestore esistente fa il resto.
     document.querySelectorAll('.tab').forEach(btn => {
-      btn.addEventListener('click', () => resetSearch(false), true);
+      btn.addEventListener('click', () => closePanel(false), true);
     });
     const pastBtnEl = document.getElementById('past-btn');
-    if (pastBtnEl) pastBtnEl.addEventListener('click', () => resetSearch(false), true);
+    if (pastBtnEl) pastBtnEl.addEventListener('click', () => closePanel(false), true);
   })();
   </script>
   <!-- ==== fine blocco ricerca ==== -->
