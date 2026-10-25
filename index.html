@@ -1659,6 +1659,27 @@
       cubi: /\bcub[oi]\b/,
     };
 
+    // ------------------------------------------------------------------
+    // "PORTAMI LÌ": luoghi per cui la card mostra il pulsante del navigatore.
+    //   re  → confrontata con il luogo dell'evento (minuscolo, senza accenti)
+    //   q   → testo cercato su Google Maps / Apple Maps
+    //   lat, lng (facoltativi) → se un luogo non viene trovato bene dal nome, metti le
+    //                            coordinate precise qui e vengono usate al posto di q
+    // I luoghi non elencati (cubi, aule, online…) non hanno il pulsante.
+    // ------------------------------------------------------------------
+    const NAV = [
+      { re: /teatro auditorium|\btau\b/,       q: 'Teatro Auditorium Unical, Arcavacata di Rende' },
+      { re: /piccolo teatro/,                  q: 'Piccolo Teatro Unical, Arcavacata di Rende' },
+      { re: /aula magna/,                      q: 'Aula Magna, Università della Calabria, Arcavacata di Rende' },
+      { re: /university club/,                q: 'University Club, Università della Calabria, Arcavacata di Rende' },
+      { re: /centro congressi/,                q: 'Centro Congressi, Università della Calabria, Arcavacata di Rende' },
+      { re: /vermicelli/,                      q: 'Piazza Vermicelli, Università della Calabria, Arcavacata di Rende' },
+      { re: /\bponte\b.*\bbucci\b/,            q: 'Ponte Pietro Bucci, Università della Calabria, Arcavacata di Rende' },
+      { re: /polifunzionale/,                  q: 'Polifunzionale, Università della Calabria, Arcavacata di Rende' },
+      { re: /cinema campus/,                   q: 'Cinema Campus, Università della Calabria, Arcavacata di Rende' },
+      { re: /rimuseum/,                        q: 'RiMuseum, Università della Calabria, Arcavacata di Rende' },
+    ];
+
     const tabs = document.getElementById('tabs');
     const header = document.querySelector('header');
     if (!tabs || !header || typeof render !== 'function' || typeof getBuckets !== 'function') return;
@@ -1739,9 +1760,40 @@
       return re ? (text => re.test(text)) : (text => text.includes(w));
     }
 
+    // distanza di modifica tra due parole (conta come 1 anche lo scambio di due lettere:
+    // "taetro" → "teatro" = 1)
+    function editDist(a, b) {
+      const al = a.length, bl = b.length;
+      const d = [];
+      for (let i = 0; i <= al; i++) { d[i] = [i]; }
+      for (let j = 0; j <= bl; j++) { d[0][j] = j; }
+      for (let i = 1; i <= al; i++) {
+        for (let j = 1; j <= bl; j++) {
+          const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+          d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost);
+          if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+            d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+          }
+        }
+      }
+      return d[al][bl];
+    }
+    // versione "tollerante": usata solo se la ricerca esatta non trova niente.
+    // Parole corte (< 4 lettere) e sinonimi restano esatti.
+    function fuzzyMatcher(w) {
+      if (w.length < 4 || SYNONYMS[w]) return wordMatcher(w);
+      const maxd = w.length >= 8 ? 2 : 1;
+      return text => {
+        if (text.includes(w)) return true;
+        return text.split(/[^a-z0-9]+/).some(tok =>
+          Math.abs(tok.length - w.length) <= maxd && editDist(tok, w) <= maxd);
+      };
+    }
+
     function computeResults() {
       const words = norm(input.value).split(/\s+/).filter(Boolean);
-      const matchers = words.map(wordMatcher);
+      let matchers = words.map(wordMatcher);
+      S.fuzzy = false;
       const dateVal = dateInput.value; // "YYYY-MM-DD" oppure ""
       const now = new Date();
       const startToday = dayStart(now);
@@ -1758,7 +1810,7 @@
         to = S.quick.to;
       }
 
-      const found = events.filter(e => {
+      function findWith(ms) { return events.filter(e => {
         if (from) {
           // l'evento tocca l'intervallo (anche se dura più giorni)
           const s = dayStart(e.dateObj);
@@ -1768,12 +1820,20 @@
           return false; // senza data scelta: da 7 giorni fa in avanti
         }
         if (S.place && !S.place.re.test(placeKey(e))) return false;
-        if (matchers.length) {
+        if (ms.length) {
           const h = haystack(e);
-          if (!matchers.every(m => m(h))) return false;
+          if (!ms.every(m => m(h))) return false;
         }
         return true;
-      });
+      }); }
+
+      let found = findWith(matchers);
+      // nessun risultato esatto? riprova tollerando piccoli errori di battitura
+      if (!found.length && words.some(w => w.length >= 4)) {
+        const fz = words.map(fuzzyMatcher);
+        const alt = findWith(fz);
+        if (alt.length) { found = alt; matchers = fz; S.fuzzy = true; }
+      }
 
       // rilevanza: parola nel titolo (3) > nel luogo (2) > solo in descrizione/programma (1)
       function score(e) {
@@ -1813,7 +1873,48 @@
       if (S.active && tab !== 'cerca') tab = 'cerca';
       origRender(tab);
       if (tab === 'cerca') afterSearchRender();
+      addNavButtons(); // vale per tutte le schede, non solo per la ricerca
     };
+
+    // ---------- pulsante "Portami lì" ----------
+    const NAV_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>';
+
+    function navFor(e) {
+      const p = norm(stripTags(e.place));
+      if (!p || /altri luoghi|mappa|\bonline\b/.test(p)) return null;
+      return NAV.find(n => n.re.test(p)) || null;
+    }
+    function isApple() {
+      return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    }
+    function navUrl(n) {
+      const dest = (n.lat != null && n.lng != null) ? n.lat + ',' + n.lng : n.q;
+      return isApple()
+        ? 'https://maps.apple.com/?daddr=' + encodeURIComponent(dest)
+        : 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(dest);
+    }
+    function addNavButtons() {
+      listEl.querySelectorAll('.card').forEach(card => {
+        if (card.querySelector('.nav-btn')) return;
+        const ev = events.find(x => String(x.id) === card.dataset.eventId);
+        const n = ev && navFor(ev);
+        const holder = card.querySelector('.card-action-buttons');
+        if (!n || !holder) return;
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'share-btn nav-btn'; // stesso aspetto del pulsante condividi
+        b.title = 'Portami lì';
+        b.setAttribute('aria-label', 'Portami lì');
+        b.innerHTML = NAV_ICON;
+        b.addEventListener('click', (evt) => {
+          evt.stopPropagation();
+          try { if (typeof track === 'function') track('click_portami_li', { evento: ev.title, luogo: ev.place }); } catch (err) {}
+          window.open(navUrl(n), '_blank', 'noopener');
+        });
+        holder.insertBefore(b, holder.firstChild);
+      });
+    }
 
     function afterSearchRender() {
       const now = new Date();
@@ -1848,7 +1949,8 @@
         empty.appendChild(b);
       }
       const n = S.results.length;
-      count.textContent = n === 1 ? '1 evento trovato' : n + ' eventi trovati';
+      count.textContent = (n === 1 ? '1 evento trovato' : n + ' eventi trovati')
+        + (S.fuzzy ? ' · risultati simili a quello che hai scritto' : '');
       highlightHits();
     }
 
@@ -2065,6 +2167,13 @@
     // su desktop il campo data invisibile si apre solo con questo
     dateInput.addEventListener('click', () => {
       try { if (dateInput.showPicker) dateInput.showPicker(); } catch (err) {}
+    });
+    // Toccando fuori dall'ovale, se è vuoto (niente scritto né scelto), si richiude da solo.
+    // Se c'è una ricerca in corso non lo tocca, così i risultati restano.
+    document.addEventListener('click', (ev) => {
+      if (!isOpen() || hasFilters()) return;
+      if (pill.contains(ev.target) || chips.contains(ev.target)) return;
+      closePill(true);
     });
     input.addEventListener('keydown', (ev) => {
       if (ev.key === 'Escape') closePill(true);
