@@ -1449,7 +1449,7 @@
   })();
   </script>
   <!-- ==== fine blocco locandine ==== -->
-  <!-- ==== RICERCA: lente che si allarga in un ovale (stile Google) → titolo / descrizione / luogo + giorno (incollato prima di </body>) ==== -->
+  <!-- ==== RICERCA: lente che si allarga in un ovale (stile Google) → testo + giorno + luoghi (incollato prima di </body>) ==== -->
   <style>
     header{ position:relative; }
 
@@ -1572,11 +1572,73 @@
       margin:-8px 2px 14px;
     }
     .search-count:empty{ display:none; }
+
+    /* scorciatoie: Weekend + luoghi. Una sola riga che scorre di lato col dito */
+    .search-chips{
+      display:none;
+      gap:8px;
+      margin:-6px -20px 14px;   /* esce dai margini della pagina così lo scorrimento arriva al bordo */
+      padding:0 20px 2px;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
+    }
+    .search-chips::-webkit-scrollbar{ display:none; }
+    .search-chips.show{ display:flex; }
+    .search-chip{
+      flex-shrink:0;
+      background:none;
+      border:1px solid var(--line);
+      color:var(--ink);
+      font-family:'Inter',sans-serif;
+      font-size:13px;
+      font-weight:600;
+      padding:6px 14px;
+      border-radius:100px;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+    .search-chip:hover{ border-color:var(--muted); }
+    .search-chip.active{
+      background:var(--ink);
+      border-color:var(--ink);
+      color:var(--paper);
+    }
+    .search-chip-sep{
+      flex-shrink:0;
+      width:1px;
+      background:var(--line);
+      margin:2px 2px;
+    }
   </style>
   <script>
   (function () {
     // Metti false se NON vuoi registrare su Umami cosa cercano le persone
     const TRACK_SEARCHES = true;
+
+    // ------------------------------------------------------------------
+    // PILLOLE: per aggiungerne o toglierne basta modificare questo elenco.
+    //   type 'time'  → filtro sul tempo
+    //   type 'place' → filtro sul luogo: "re" è confrontata con il luogo
+    //                  dell'evento, già in minuscolo e senza accenti
+    // ------------------------------------------------------------------
+    const CHIPS = [
+      { k: 'weekend',        label: 'Weekend',           type: 'time' },
+      { k: 'tau',            label: 'TAU',               type: 'place', re: /teatro auditorium|\btau\b/ },
+      { k: 'cubi',           label: 'Cubi',              type: 'place', re: /\bcub[oi]\b/ },
+      { k: 'aulamagna',      label: 'Aula Magna',        type: 'place', re: /aula magna/ },
+      { k: 'online',         label: 'Online',            type: 'place', re: /\bonline\b/ },
+      { k: 'vermicelli',     label: 'Piazza Vermicelli', type: 'place', re: /vermicelli/ },
+      { k: 'universityclub', label: 'University Club',   type: 'place', re: /university club/ },
+    ];
+
+    // Sinonimi per il testo scritto nella barra: chi scrive "tau" trova anche
+    // "Teatro Auditorium Unical" (ma NON il Piccolo Teatro), "cubo" e "cubi" sono lo stesso.
+    const SYNONYMS = {
+      tau:  /\btau\b|teatro auditorium/,
+      cubo: /\bcub[oi]\b/,
+      cubi: /\bcub[oi]\b/,
+    };
 
     const tabs = document.getElementById('tabs');
     const header = document.querySelector('header');
@@ -1606,6 +1668,14 @@
     count.className = 'search-count';
     tabs.insertAdjacentElement('beforebegin', count);
 
+    const chips = document.createElement('div');
+    chips.className = 'search-chips';
+    chips.innerHTML = CHIPS.map((c, i) =>
+      '<button type="button" class="search-chip" data-k="' + c.k + '">' + c.label + '</button>' +
+      (i === 0 ? '<div class="search-chip-sep"></div>' : '')
+    ).join('');
+    count.insertAdjacentElement('beforebegin', chips);
+
     const lens = document.getElementById('search-lens');
     const input = document.getElementById('search-input');
     const dateInput = document.getElementById('search-date');
@@ -1614,7 +1684,8 @@
     const clearBtn = document.getElementById('search-clear');
     const listEl = document.getElementById('list');
 
-    const S = { active: false, lastTab: 'oggi', results: [] };
+    // quick = intervallo di giorni (Weekend), place = pillola di luogo attiva
+    const S = { active: false, lastTab: 'oggi', results: [], quick: null, place: null };
 
     // ---------- utilità ----------
     // minuscole e senza accenti: "universita" trova "università"
@@ -1636,40 +1707,65 @@
         .join(' ');
       return norm(stripTags([e.title, e.description, e.place, subs].join(' ')));
     }
+    // una parola scritta dall'utente → funzione che dice se un testo la contiene
+    function wordMatcher(w) {
+      const re = SYNONYMS[w];
+      return re ? (text => re.test(text)) : (text => text.includes(w));
+    }
 
     function computeResults() {
       const words = norm(input.value).split(/\s+/).filter(Boolean);
+      const matchers = words.map(wordMatcher);
       const dateVal = dateInput.value; // "YYYY-MM-DD" oppure ""
       const now = new Date();
       const startToday = dayStart(now);
       const startWeekAgo = new Date(startToday);
       startWeekAgo.setDate(startToday.getDate() - 7);
 
-      let pick = null;
+      // intervallo di giorni richiesto: un giorno scelto, oppure il weekend
+      let from = null, to = null;
       if (dateVal) {
         const p = dateVal.split('-').map(Number);
-        pick = new Date(p[0], p[1] - 1, p[2]);
+        from = to = new Date(p[0], p[1] - 1, p[2]);
+      } else if (S.quick) {
+        from = S.quick.from;
+        to = S.quick.to;
       }
 
       const found = events.filter(e => {
-        if (pick) {
-          // l'evento cade nel giorno scelto (anche se dura più giorni)
+        if (from) {
+          // l'evento tocca l'intervallo (anche se dura più giorni)
           const s = dayStart(e.dateObj);
           const en = e.endDateObj ? dayStart(e.endDateObj) : s;
-          if (pick < s || pick > en) return false;
+          if (to < s || from > en) return false;
         } else if (e.dateObj < startWeekAgo) {
           return false; // senza data scelta: da 7 giorni fa in avanti
         }
-        if (words.length) {
+        if (S.place && !S.place.re.test(norm(e.place))) return false;
+        if (matchers.length) {
           const h = haystack(e);
-          if (!words.every(w => h.includes(w))) return false;
+          if (!matchers.every(m => m(h))) return false;
         }
         return true;
       });
 
-      // prima quelli da oggi in poi (in ordine), poi i passati (più recenti prima)
-      const upcoming = found.filter(e => e.dateObj >= startToday).sort((a, b) => a.dateObj - b.dateObj);
-      const past = found.filter(e => e.dateObj < startToday).sort((a, b) => b.dateObj - a.dateObj);
+      // rilevanza: parola nel titolo (3) > nel luogo (2) > solo in descrizione/programma (1)
+      function score(e) {
+        if (!matchers.length) return 0;
+        const t = norm(stripTags(e.title));
+        const p = norm(stripTags(e.place));
+        let s = 0;
+        matchers.forEach(m => { s += m(t) ? 3 : (m(p) ? 2 : 1); });
+        return s;
+      }
+      const scores = new Map(found.map(e => [e, score(e)]));
+
+      // Due gruppi che non si mescolano mai: prima i futuri, poi i passati in fondo.
+      // Dentro ciascun gruppo: più rilevanti per primi, a parità per data.
+      const upcoming = found.filter(e => e.dateObj >= startToday)
+        .sort((a, b) => (scores.get(b) - scores.get(a)) || (a.dateObj - b.dateObj));
+      const past = found.filter(e => e.dateObj < startToday)
+        .sort((a, b) => (scores.get(b) - scores.get(a)) || (b.dateObj - a.dateObj));
       return upcoming.concat(past);
     }
 
@@ -1703,6 +1799,19 @@
           if (rb) rb.remove();
         }
       });
+      // riga "Già passati" tra i futuri e i passati (solo se ci sono entrambi)
+      const startToday = dayStart(now);
+      const cards = Array.from(listEl.querySelectorAll('.card'));
+      const firstPast = cards.find(card => {
+        const ev = events.find(x => String(x.id) === card.dataset.eventId);
+        return ev && ev.dateObj < startToday;
+      });
+      if (firstPast && firstPast !== cards[0]) {
+        const sep = document.createElement('div');
+        sep.className = 'day-separator';
+        sep.textContent = 'Già passati';
+        firstPast.parentNode.insertBefore(sep, firstPast);
+      }
       // nessun risultato: aggiungi il tasto per cancellare
       const empty = listEl.querySelector('.empty');
       if (empty && !empty.querySelector('button')) {
@@ -1731,10 +1840,54 @@
       }
     }
 
+    // evidenzia le pillole attive
+    function updateChips() {
+      chips.querySelectorAll('.search-chip').forEach(btn => {
+        const k = btn.dataset.k;
+        const on = (k === 'weekend' && !!S.quick) || (!!S.place && S.place.k === k);
+        btn.classList.toggle('active', on);
+      });
+    }
+
+    function hasFilters() {
+      return !!(input.value.trim() || dateInput.value || S.quick || S.place);
+    }
+
+    // intervallo del prossimo weekend (sabato e domenica; se è già weekend, da oggi)
+    function weekendRange() {
+      const t = dayStart(new Date());
+      const add = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+      const dow = t.getDay(); // 0 = domenica, 6 = sabato
+      if (dow === 6) return { from: t, to: add(t, 1) };
+      if (dow === 0) return { from: t, to: t };
+      const sat = add(t, 6 - dow);
+      return { from: sat, to: add(sat, 1) };
+    }
+
+    chips.addEventListener('click', (ev) => {
+      const btn = ev.target.closest('.search-chip');
+      if (!btn) return;
+      const cfg = CHIPS.find(c => c.k === btn.dataset.k);
+      if (!cfg) return;
+      let activated;
+      if (cfg.type === 'time') {
+        activated = !S.quick;
+        S.quick = activated ? weekendRange() : null;
+        if (activated) dateInput.value = ''; // il weekend sostituisce il giorno scelto a mano
+      } else {
+        activated = !(S.place && S.place.k === cfg.k);
+        S.place = activated ? cfg : null; // una pillola di luogo alla volta
+      }
+      if (activated && TRACK_SEARCHES) {
+        try { if (typeof track === 'function') track('cerca_scorciatoia', { quale: cfg.k }); } catch (err) {}
+      }
+      startOrUpdate();
+    });
+
     function startOrUpdate() {
       updateDateLabel();
-      const hasQuery = !!(input.value.trim() || dateInput.value);
-      if (!hasQuery) { resetSearch(true); return; }
+      updateChips();
+      if (!hasFilters()) { resetSearch(true); return; }
       if (!S.active) {
         S.active = true;
         const cur = document.querySelector('.tab.active');
@@ -1745,12 +1898,15 @@
       scheduleTrack();
     }
 
-    // svuota i campi e chiude la modalità ricerca; redraw=false: non ridisegno
+    // svuota tutto e chiude la modalità ricerca; redraw=false: non ridisegno
     // (lo farà il gestore del click che ha causato la chiusura)
     function resetSearch(redraw) {
       input.value = '';
       dateInput.value = '';
+      S.quick = null;
+      S.place = null;
       updateDateLabel();
+      updateChips();
       count.textContent = '';
       if (!S.active) return;
       S.active = false;
@@ -1762,6 +1918,7 @@
     function isOpen() { return pill.classList.contains('open'); }
     function openPill() {
       pill.classList.add('open');
+      chips.classList.add('show');
       header.classList.add('search-open');
       lens.setAttribute('aria-expanded', 'true');
       // aspetta l'animazione, poi porta il cursore nel campo (apre la tastiera)
@@ -1770,6 +1927,7 @@
     function closePill(redraw) {
       resetSearch(redraw);
       pill.classList.remove('open');
+      chips.classList.remove('show');
       header.classList.remove('search-open');
       lens.setAttribute('aria-expanded', 'false');
       input.blur();
@@ -1781,7 +1939,7 @@
     });
     // ✕: se c'è qualcosa scritto/scelto lo cancella, altrimenti richiude l'ovale
     clearBtn.addEventListener('click', () => {
-      if (input.value || dateInput.value) { resetSearch(true); input.focus(); }
+      if (hasFilters()) { resetSearch(true); input.focus(); }
       else closePill(true);
     });
 
@@ -1811,7 +1969,10 @@
       clearTimeout(typeTimer);
       typeTimer = setTimeout(startOrUpdate, 150);
     });
-    dateInput.addEventListener('change', startOrUpdate);
+    dateInput.addEventListener('change', () => {
+      if (dateInput.value) S.quick = null; // il giorno scelto a mano sostituisce il weekend
+      startOrUpdate();
+    });
     // su desktop il campo data invisibile si apre solo con questo
     dateInput.addEventListener('click', () => {
       try { if (dateInput.showPicker) dateInput.showPicker(); } catch (err) {}
