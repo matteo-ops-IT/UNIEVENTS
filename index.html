@@ -1449,5 +1449,271 @@
   })();
   </script>
   <!-- ==== fine blocco locandine ==== -->
+  <!-- ==== RICERCA: titolo / descrizione / luogo + giorno (incollato prima di </body>) ==== -->
+  <style>
+    .search-row{
+      display:flex;
+      gap:8px;
+      margin-bottom:12px;
+    }
+    .search-field{
+      position:relative;
+      flex:1;
+      min-width:0;
+    }
+    .search-input,
+    .search-date{
+      font-family:'Inter',sans-serif;
+      font-size:16px; /* 16px evita lo zoom automatico su iPhone */
+      color:var(--ink);
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:6px;
+      padding:10px 12px;
+      height:42px;
+      outline:none;
+    }
+    .search-input{
+      width:100%;
+      padding-right:36px;
+    }
+    .search-date{
+      flex-shrink:0;
+      width:142px;
+    }
+    .search-input:focus,
+    .search-date:focus{
+      border-color:var(--ink);
+    }
+    .search-clear{
+      position:absolute;
+      right:6px;
+      top:50%;
+      transform:translateY(-50%);
+      width:28px;
+      height:28px;
+      border:none;
+      border-radius:50%;
+      background:var(--line);
+      color:var(--ink);
+      font-size:13px;
+      line-height:1;
+      cursor:pointer;
+      display:none;
+    }
+    .search-clear.visible{ display:block; }
+    .search-count{
+      font-size:13px;
+      color:var(--muted);
+      margin:-4px 2px 14px;
+      min-height:0;
+    }
+    .search-count:empty{ display:none; }
+  </style>
+  <script>
+  (function () {
+    // Metti false se NON vuoi registrare su Umami cosa cercano le persone
+    const TRACK_SEARCHES = true;
+
+    const tabs = document.getElementById('tabs');
+    if (!tabs || typeof render !== 'function' || typeof getBuckets !== 'function') return;
+
+    // ---------- interfaccia ----------
+    const row = document.createElement('div');
+    row.className = 'search-row';
+    row.innerHTML =
+      '<div class="search-field">' +
+        '<input class="search-input" id="search-input" type="search" placeholder="Cerca un evento…" ' +
+        'autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Cerca eventi">' +
+        '<button class="search-clear" id="search-clear" type="button" aria-label="Cancella ricerca">✕</button>' +
+      '</div>' +
+      '<input class="search-date" id="search-date" type="date" aria-label="Filtra per giorno">';
+    const count = document.createElement('div');
+    count.className = 'search-count';
+    tabs.insertAdjacentElement('beforebegin', row);
+    tabs.insertAdjacentElement('beforebegin', count);
+
+    const input = document.getElementById('search-input');
+    const dateInput = document.getElementById('search-date');
+    const clearBtn = document.getElementById('search-clear');
+    const listEl = document.getElementById('list');
+
+    const S = { active: false, lastTab: 'oggi', results: [] };
+
+    // ---------- utilità ----------
+    // minuscole e senza accenti: "universita" trova "università"
+    function norm(s) {
+      return String(s || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
+    }
+    function stripTags(s) {
+      return String(s || '').replace(/<[^>]*>/g, ' ');
+    }
+    function dayStart(d) {
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    }
+    function haystack(e) {
+      const subs = (e.sub_events || [])
+        .map(x => [x.title, x.place, x.description].join(' '))
+        .join(' ');
+      return norm(stripTags([e.title, e.description, e.place, subs].join(' ')));
+    }
+
+    function computeResults() {
+      const words = norm(input.value).split(/\s+/).filter(Boolean);
+      const dateVal = dateInput.value; // "YYYY-MM-DD" oppure ""
+      const now = new Date();
+      const startToday = dayStart(now);
+      const startWeekAgo = new Date(startToday);
+      startWeekAgo.setDate(startToday.getDate() - 7);
+
+      let pick = null;
+      if (dateVal) {
+        const p = dateVal.split('-').map(Number);
+        pick = new Date(p[0], p[1] - 1, p[2]);
+      }
+
+      const found = events.filter(e => {
+        if (pick) {
+          // l'evento cade nel giorno scelto (anche se dura più giorni)
+          const s = dayStart(e.dateObj);
+          const en = e.endDateObj ? dayStart(e.endDateObj) : s;
+          if (pick < s || pick > en) return false;
+        } else if (e.dateObj < startWeekAgo) {
+          return false; // senza data scelta: da 7 giorni fa in avanti
+        }
+        if (words.length) {
+          const h = haystack(e);
+          if (!words.every(w => h.includes(w))) return false;
+        }
+        return true;
+      });
+
+      // prima quelli da oggi in poi (in ordine), poi i passati (più recenti prima)
+      const upcoming = found.filter(e => e.dateObj >= startToday).sort((a, b) => a.dateObj - b.dateObj);
+      const past = found.filter(e => e.dateObj < startToday).sort((a, b) => b.dateObj - a.dateObj);
+      return upcoming.concat(past);
+    }
+
+    // ---------- aggancio al render esistente (senza modificarlo) ----------
+    const origGetBuckets = window.getBuckets;
+    window.getBuckets = function () {
+      const b = origGetBuckets();
+      b.cerca = S.active ? computeResults() : [];
+      S.results = b.cerca;
+      return b;
+    };
+
+    if (typeof emptyMessages === 'object') {
+      emptyMessages.cerca = { text: 'Nessun evento trovato. Prova con un\u2019altra parola o un altro giorno.', jump: null, cta: null };
+    }
+
+    const origRender = window.render;
+    window.render = function (tab) {
+      if (S.active && tab !== 'cerca') tab = 'cerca';
+      origRender(tab);
+      if (tab === 'cerca') afterSearchRender();
+    };
+
+    function afterSearchRender() {
+      const now = new Date();
+      // niente "Ricordamelo" per eventi già conclusi
+      listEl.querySelectorAll('.card').forEach(card => {
+        const ev = events.find(x => String(x.id) === card.dataset.eventId);
+        if (ev && isElapsed(ev, now)) {
+          const rb = card.querySelector('.remind-btn');
+          if (rb) rb.remove();
+        }
+      });
+      // nessun risultato: aggiungi il tasto per cancellare
+      const empty = listEl.querySelector('.empty');
+      if (empty && !empty.querySelector('button')) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = 'Cancella la ricerca';
+        b.addEventListener('click', () => resetSearch(true));
+        empty.appendChild(b);
+      }
+      const n = S.results.length;
+      count.textContent = n === 1 ? '1 evento trovato' : n + ' eventi trovati';
+    }
+
+    // ---------- stato ricerca ----------
+    function updateClearBtn() {
+      clearBtn.classList.toggle('visible', !!(input.value || dateInput.value));
+    }
+
+    function startOrUpdate() {
+      updateClearBtn();
+      const hasQuery = !!(input.value.trim() || dateInput.value);
+      if (!hasQuery) { resetSearch(true); return; }
+      if (!S.active) {
+        S.active = true;
+        const cur = document.querySelector('.tab.active');
+        if (cur) S.lastTab = cur.dataset.tab;
+        tabs.style.display = 'none';
+      }
+      render('cerca');
+      scheduleTrack();
+    }
+
+    // silent=false: chiude la ricerca senza ridisegnare (lo farà il gestore del click)
+    function resetSearch(redraw) {
+      input.value = '';
+      dateInput.value = '';
+      updateClearBtn();
+      count.textContent = '';
+      if (!S.active) return;
+      S.active = false;
+      if (!inPastView) tabs.style.display = 'flex';
+      if (redraw) render(inPastView ? 'passati' : S.lastTab);
+    }
+
+    // ---------- statistiche (Umami) ----------
+    let trackTimer = null;
+    let lastTracked = '';
+    function scheduleTrack() {
+      if (!TRACK_SEARCHES) return;
+      clearTimeout(trackTimer);
+      trackTimer = setTimeout(() => {
+        const q = norm(input.value).trim();
+        const d = dateInput.value;
+        const key = q + '|' + d;
+        if ((q.length < 2 && !d) || key === lastTracked) return;
+        lastTracked = key;
+        try {
+          if (typeof track === 'function') {
+            track('cerca', { testo: q || '(solo data)', data: d || '', risultati: S.results.length });
+          }
+        } catch (err) {}
+      }, 1500);
+    }
+
+    // ---------- eventi ----------
+    let typeTimer = null;
+    input.addEventListener('input', () => {
+      updateClearBtn();
+      clearTimeout(typeTimer);
+      typeTimer = setTimeout(startOrUpdate, 150);
+    });
+    dateInput.addEventListener('change', startOrUpdate);
+    clearBtn.addEventListener('click', () => { resetSearch(true); input.blur(); });
+    input.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape') resetSearch(true);
+      if (ev.key === 'Enter') input.blur(); // chiude la tastiera sul telefono
+    });
+
+    // Toccando una scheda (Oggi / Settimana / Prossimamente) o "Cosa mi sono perso"
+    // la ricerca si chiude e il gestore esistente fa il resto.
+    document.querySelectorAll('.tab').forEach(btn => {
+      btn.addEventListener('click', () => resetSearch(false), true);
+    });
+    const pastBtnEl = document.getElementById('past-btn');
+    if (pastBtnEl) pastBtnEl.addEventListener('click', () => resetSearch(false), true);
+  })();
+  </script>
+  <!-- ==== fine blocco ricerca ==== -->
 </body>
 </html>
