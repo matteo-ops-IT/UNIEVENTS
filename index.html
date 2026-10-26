@@ -3,15 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Uni Events</title>
-<meta name="description" content="Quello che succede all'Unical, prima che finisca. Tutti gli eventi del campus in un unico posto.">
+<title>Uni Events — Tutti gli eventi dell'Unical (Università della Calabria)</title>
+<meta name="description" content="Uni Events raccoglie tutti gli eventi dell'Unical (Università della Calabria) in un unico posto: welcome day, feste, conferenze, workshop. Non perderti più nulla del campus di Arcavacata.">
+<link rel="canonical" href="https://unievents.it/">
 
 <!-- Anteprima quando il link viene condiviso su WhatsApp, Instagram, ecc. -->
 <meta property="og:type" content="website">
 <meta property="og:title" content="Uni Events — Gli eventi dell'Unical">
 <meta property="og:description" content="Quello che succede all'Unical, prima che finisca. Tutti gli eventi del campus in un unico posto.">
-<meta property="og:image" content="https://TUO-DOMINIO/social-preview.png">
-<meta property="og:url" content="https://TUO-DOMINIO/">
+<meta property="og:image" content="https://unievents.it/social-preview.png">
+<meta property="og:url" content="https://unievents.it/">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1B1B1D">
@@ -519,186 +520,6 @@
     font-size:17px;
     margin-bottom:3px;
   }
-  /* ============ MODALITÀ "SCOPRI" (stile TikTok) ============ */
-  .mode-switch{
-    position:fixed;
-    top:calc(14px + env(safe-area-inset-top,0px));
-    right:16px;
-    z-index:400;
-    background:rgba(0,0,0,0.45);
-    backdrop-filter:blur(6px);
-    color:#fff;
-    border:1px solid rgba(255,255,255,0.35);
-    font-family:'Inter',sans-serif;
-    font-weight:700;
-    font-size:13px;
-    padding:9px 14px;
-    border-radius:100px;
-    cursor:pointer;
-    display:flex;
-    align-items:center;
-    gap:6px;
-  }
-  .discover-overlay{
-    position:fixed;
-    inset:0;
-    background:#000;
-    z-index:300;
-    display:none;
-    flex-direction:column;
-  }
-  .discover-overlay.visible{ display:flex; }
-  .discover-feed{
-    flex:1;
-    overflow-y:auto;
-    scroll-snap-type:y mandatory;
-    scroll-behavior:smooth;
-  }
-  .discover-slide{
-    position:relative;
-    height:100%;
-    height:100dvh;
-    scroll-snap-align:start;
-    scroll-snap-stop:always;
-    display:flex;
-    flex-direction:column;
-    justify-content:flex-end;
-    overflow:hidden;
-    color:#fff;
-  }
-  .discover-slide-backdrop{
-    position:absolute;
-    inset:-20px;
-    background-size:cover;
-    background-position:center;
-    filter:blur(22px) brightness(0.55);
-    transform:scale(1.15);
-  }
-  .discover-slide-backdrop.no-image{
-    background:linear-gradient(155deg,#3a1113,#1B1B1D 70%);
-    filter:none;
-    transform:none;
-  }
-  .discover-slide-poster{
-    position:absolute;
-    inset:0;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:0 0 26vh;
-  }
-  .discover-slide-poster img{
-    max-width:100%;
-    max-height:100%;
-    object-fit:contain;
-    display:block;
-  }
-  .discover-slide-gradient{
-    position:absolute;
-    inset:0;
-    background:linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.15) 40%, rgba(0,0,0,0.92) 100%);
-  }
-  .discover-content{
-    position:relative;
-    padding:18px 20px calc(26px + env(safe-area-inset-bottom,0px));
-  }
-  .discover-date-badge{
-    display:inline-block;
-    background:var(--red);
-    color:#fff;
-    font-weight:700;
-    font-size:13.5px;
-    padding:6px 12px;
-    border-radius:100px;
-    margin-bottom:12px;
-  }
-  .discover-title{
-    font-family:'Archivo Black',sans-serif;
-    font-size:26px;
-    line-height:1.2;
-    margin-bottom:8px;
-    text-shadow:0 2px 10px rgba(0,0,0,0.5);
-  }
-  .discover-place{
-    font-size:14.5px;
-    opacity:0.9;
-    margin-bottom:12px;
-  }
-  .discover-reason{
-    font-size:14px;
-    line-height:1.5;
-    opacity:0.95;
-    margin-bottom:16px;
-    max-width:92%;
-  }
-  .discover-reason::before{
-    content:"✨ Perché andarci — ";
-    font-weight:700;
-    color:var(--tape);
-  }
-  .discover-actions{
-    display:flex;
-    align-items:center;
-    gap:10px;
-  }
-  .discover-actions .remind-btn,
-  .discover-actions .share-btn{
-    background:rgba(255,255,255,0.14);
-    border-color:rgba(255,255,255,0.35);
-    color:#fff;
-    backdrop-filter:blur(4px);
-  }
-  .discover-actions .remind-btn.active{
-    background:var(--red);
-    border-color:var(--red);
-  }
-  .discover-source{
-    margin-left:auto;
-    color:#fff;
-    border-color:rgba(255,255,255,0.35);
-    background:rgba(255,255,255,0.14);
-  }
-  .discover-topbar{
-    position:absolute;
-    top:0; left:0; right:0;
-    z-index:2;
-    display:flex;
-    align-items:center;
-    padding:calc(14px + env(safe-area-inset-top,0px)) 16px 0;
-  }
-  .discover-progress{
-    color:#fff;
-    font-size:13px;
-    font-weight:600;
-    background:rgba(0,0,0,0.35);
-    padding:5px 11px;
-    border-radius:100px;
-  }
-  .discover-hint{
-    position:absolute;
-    bottom:18px;
-    left:50%;
-    transform:translateX(-50%);
-    color:#fff;
-    font-size:12.5px;
-    font-weight:600;
-    opacity:0.85;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:2px;
-    animation:bob 1.4s ease-in-out infinite;
-    pointer-events:none;
-  }
-  @keyframes bob{
-    0%,100%{ transform:translate(-50%,0); }
-    50%{ transform:translate(-50%,-6px); }
-  }
-  .discover-slide.is-live .discover-date-badge{
-    background:#fff;
-    color:var(--red);
-  }
-
   .install-banner button{
     background:var(--red);
     color:#fff;
@@ -714,7 +535,7 @@
 <script defer src="https://cloud.umami.is/script.js" data-website-id="ccaa6b2a-5f24-4c32-a88a-ac752c7201fb"></script>
 </head>
 <body>
-  <div class="wrap" style="display:none">
+  <div class="wrap">
     <header>
       <div class="logo"><img src="logo-wordmark.png" alt="Uni Events"></div>
       <div class="tagline">Quello che succede all'Unical, prima che finisca.</div>
@@ -751,15 +572,6 @@
       Aggiungilo alla schermata Home per aprirlo come un'app.
     </div>
     <button id="install-banner-action">Installa</button>
-  </div>
-
-  <button class="mode-switch" id="mode-switch-btn">📋 Lista</button>
-
-  <div class="discover-overlay" id="discover-overlay">
-    <div class="discover-topbar">
-      <div class="discover-progress" id="discover-progress">1 / 1</div>
-    </div>
-    <div class="discover-feed" id="discover-feed"></div>
   </div>
 
 <script>
@@ -814,7 +626,7 @@
   async function fetchEvents() {
     try {
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/events?select=*&order=event_date.asc`,
+        `${SUPABASE_URL}/rest/v1/events?select=*&approved=eq.true&order=event_date.asc`,
         {
           headers: {
             apikey: SUPABASE_ANON_KEY,
@@ -1102,172 +914,6 @@
 
   document.getElementById('segnala-link').href = "https://forms.gle/357kSGUfBum8gNg58";
 
-  // ==================================================================
-  // MODALITÀ "SCOPRI" — feed a schermo intero stile TikTok, un evento
-  // alla volta. Ogni card mostra da sola: cos'è, quando è, perché
-  // vale la pena andarci. Si scorre verticalmente (swipe/scroll).
-  // ==================================================================
-  const DISCOVER_REASONS = [
-    "Un modo diverso per staccare dalla solita routine di lezioni.",
-    "Occasione buona per conoscere gente nuova nel campus.",
-    "Vale un salto, anche solo per curiosità: dura poco.",
-    "Di quegli eventi di cui poi si parla il giorno dopo.",
-    "Piccolo impegno, possibile bel ricordo da raccontare.",
-    "Un'ora diversa dal solito, giusto per cambiare aria.",
-  ];
-  function discoverReason(e) {
-    if (e.description) {
-      const plain = e.description.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-      if (plain) return plain.length > 170 ? plain.slice(0, 167) + '…' : plain;
-    }
-    const sum = String(e.id).split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-    return DISCOVER_REASONS[sum % DISCOVER_REASONS.length];
-  }
-  function discoverDateLabel(e, now) {
-    const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const startTarget = new Date(e.dateObj.getFullYear(), e.dateObj.getMonth(), e.dateObj.getDate());
-    const diffDays = Math.round((startTarget - startToday) / 86400000);
-    let d;
-    if (diffDays === 0) d = 'Oggi';
-    else if (diffDays === 1) d = 'Domani';
-    else if (diffDays === -1) d = 'Ieri';
-    else {
-      const wd = e.dateObj.toLocaleDateString('it-IT', { weekday: 'long' });
-      d = `${wd.charAt(0).toUpperCase()}${wd.slice(1)} ${e.dateObj.getDate()} ${monthLabel(e.dateObj).toLowerCase()}`;
-    }
-    const t = e.dateObj.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-    return `${d} · ${t}`;
-  }
-
-  const discoverOverlay = document.getElementById('discover-overlay');
-  const discoverFeed = document.getElementById('discover-feed');
-  const discoverProgress = document.getElementById('discover-progress');
-  let discoverList = [];
-  let discoverObserver = null;
-
-  function buildDiscoverList() {
-    const now = new Date();
-    // Ordine: prima i futuri (dal più vicino), poi eventualmente i passati recenti in coda
-    const upcoming = events.filter(e => eventCutoff(e) >= now);
-    const recentPast = events
-      .filter(e => eventCutoff(e) < now)
-      .sort((a, b) => b.dateObj - a.dateObj)
-      .slice(0, 5);
-    return [...upcoming, ...recentPast];
-  }
-
-  function renderDiscoverSlide(e, now) {
-    const isReminded = !!localStorage.getItem('ue_reminded_' + e.id);
-    const live = isLive(e, now);
-    const hasSource = !!(e.link && e.link !== '#');
-    const slide = document.createElement('div');
-    slide.className = 'discover-slide' + (live ? ' is-live' : '');
-    slide.dataset.eventId = e.id;
-    slide.innerHTML = `
-      <div class="discover-slide-backdrop${e.image_url ? '' : ' no-image'}" ${e.image_url ? `style="background-image:url('${e.image_url}')"` : ''}></div>
-      ${e.image_url ? `<div class="discover-slide-poster"><img src="${e.image_url}" alt="Locandina evento" loading="lazy" onerror="this.parentElement.remove()"></div>` : ''}
-      <div class="discover-slide-gradient"></div>
-      <div class="discover-content">
-        <div class="discover-date-badge">${live ? '🔴 LIVE ORA · ' : ''}${discoverDateLabel(e, now)}</div>
-        <div class="discover-title">${e.title}</div>
-        <div class="discover-place">📍 ${e.place}</div>
-        <div class="discover-reason">${discoverReason(e)}</div>
-        <div class="discover-actions">
-          <button class="remind-btn${isReminded ? ' active' : ''}" data-event-id="${e.id}">${isReminded ? '🔔 Promemoria attivo' : '🔔 Ricordamelo'}</button>
-          <button class="share-btn" data-event-id="${e.id}" title="Condividi evento" aria-label="Condividi evento">${SHARE_ICON}</button>
-          ${hasSource ? `<a class="source-pill discover-source" href="${e.link}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation(); track('click_fonte_scopri', {evento: '${e.title.replace(/'/g, "\\'")}'})">🔗 Fonte</a>` : ''}
-        </div>
-      </div>
-    `;
-    const remindBtn = slide.querySelector('.remind-btn');
-    remindBtn.addEventListener('click', () => {
-      track(remindBtn.classList.contains('active') ? 'rimuovi_ricordamelo_scopri' : 'click_ricordamelo_scopri', { evento: e.title });
-      remindMe(e.id, remindBtn);
-    });
-    slide.querySelector('.share-btn').addEventListener('click', () => {
-      track('click_condividi_scopri', { evento: e.title });
-      shareEvent(e);
-    });
-    return slide;
-  }
-
-  function openDiscover(startId) {
-    discoverList = buildDiscoverList();
-    if (!discoverList.length) {
-      showToast('Nessun evento da scoprire al momento 🙁');
-      return;
-    }
-    track('apri_scopri', { totale: discoverList.length });
-    const now = new Date();
-    discoverFeed.innerHTML = '';
-    discoverList.forEach(e => discoverFeed.appendChild(renderDiscoverSlide(e, now)));
-
-    // Piccolo suggerimento "scorri" solo sulla primissima card, sparisce da solo
-    const firstSlide = discoverFeed.firstElementChild;
-    if (firstSlide && discoverList.length > 1) {
-      const hint = document.createElement('div');
-      hint.className = 'discover-hint';
-      hint.id = 'discover-hint';
-      hint.innerHTML = '⌃<br>Scorri per il prossimo';
-      firstSlide.appendChild(hint);
-    }
-
-    let startIndex = 0;
-    if (startId != null) {
-      const idx = discoverList.findIndex(e => String(e.id) === String(startId));
-      if (idx >= 0) startIndex = idx;
-    }
-    updateDiscoverProgress(startIndex + 1, discoverList.length);
-
-    if (discoverObserver) discoverObserver.disconnect();
-    discoverObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting && entry.intersectionRatio > 0.6) {
-          const idx = discoverList.findIndex(e => String(e.id) === entry.target.dataset.eventId);
-          if (idx >= 0) updateDiscoverProgress(idx + 1, discoverList.length);
-          const hintEl = document.getElementById('discover-hint');
-          if (hintEl) hintEl.remove();
-        }
-      });
-    }, { root: discoverFeed, threshold: [0.6] });
-    Array.from(discoverFeed.children).forEach(slide => discoverObserver.observe(slide));
-
-    // Aspetta che il feed sia nel DOM e visibile prima di posizionare lo scroll
-    requestAnimationFrame(() => { discoverFeed.scrollTop = startIndex * discoverFeed.clientHeight; });
-  }
-
-  function updateDiscoverProgress(n, total) {
-    discoverProgress.textContent = `${n} / ${total}`;
-  }
-
-  let currentMode = 'feed';
-  const modeSwitchBtn = document.getElementById('mode-switch-btn');
-  const wrapEl = document.querySelector('.wrap');
-
-  function showFeed(startId) {
-    currentMode = 'feed';
-    wrapEl.style.display = 'none';
-    discoverOverlay.classList.add('visible');
-    document.body.style.overflow = 'hidden';
-    modeSwitchBtn.textContent = '📋 Lista';
-    openDiscover(startId);
-  }
-
-  function showList(tab) {
-    currentMode = 'list';
-    discoverOverlay.classList.remove('visible');
-    document.body.style.overflow = '';
-    wrapEl.style.display = '';
-    modeSwitchBtn.textContent = '🎬 Scopri';
-    if (discoverObserver) discoverObserver.disconnect();
-    if (inPastView) render('passati'); else render(tab || document.querySelector('.tab.active')?.dataset.tab || 'oggi');
-  }
-
-  modeSwitchBtn.addEventListener('click', () => {
-    track(currentMode === 'feed' ? 'passa_a_lista' : 'passa_a_scopri');
-    if (currentMode === 'feed') showList(); else showFeed();
-  });
-
   // In quale sezione si trova un dato evento (oggi / settimana / mese / passati)?
   function findTabForEvent(eventId, buckets) {
     const id = String(eventId);
@@ -1333,9 +979,8 @@
       .map(e => ({ ...e, dateObj: new Date(e.date), endDateObj: e.end ? new Date(e.end) : null }))
       .sort((a, b) => a.dateObj - b.dateObj);
 
-    render('oggi'); // prepara la lista in background, così è pronta quando si passa a "Lista"
     const handledShare = handleSharedEvent();
-    if (!handledShare) showFeed(); else showList();
+    if (!handledShare) render('oggi');
 
     // Se l'utente aveva già attivato le notifiche in passato, rinnova
     // silenziosamente l'iscrizione ogni volta che apre l'app, così resta
@@ -1685,8 +1330,20 @@
   // Bottone di condivisione su ogni card: usa la Web Share API nativa
   // (menu "condividi" del telefono) con fallback su copia negli appunti
   // per i browser/desktop che non la supportano.
+  // Versione "solo testo" della data/ora, senza tag HTML, per condivisioni
+  // (usa – invece di - così WhatsApp non la scambia per un numero di telefono)
+  function formatDatePlain(e) {
+    const s = e.dateObj.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' });
+    const startT = e.dateObj.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    if (e.endDateObj) {
+      const endT = e.endDateObj.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+      return `${s} · ${startT}–${endT}`;
+    }
+    return `${s} · ${startT}`;
+  }
+
   async function shareEvent(e) {
-    const text = `📅 ${e.title}\n📍 ${e.place}\n🗓️ ${formatDate(e)}\n\nScopri di più su Uni Events:`;
+    const text = `📅 ${e.title}\n📍 ${e.place}\n🗓️ ${formatDatePlain(e)}\n\nScopri di più su Uni Events:`;
     // Link al nostro sito con l'id dell'evento: aprendolo, l'app va
     // automaticamente alla sezione giusta e mette in evidenza la card
     const url = `${window.location.origin}${window.location.pathname}?event=${encodeURIComponent(e.id)}`;
@@ -1710,5 +1367,1048 @@
     }
   }
 </script>
+  <!-- ==== LOCANDINE: intere + tocco per ingrandire (incollato prima di </body>) ==== -->
+  <style>
+    /* locandina intera, non ritagliata */
+    .card-image{
+      max-height:440px;
+      object-fit:contain;
+      background:var(--paper);
+      cursor:zoom-in;
+    }
+    /* ingrandimento a tutto schermo (elemento unico, fuori dalle card che sono ruotate) */
+    .lightbox{
+      position:fixed;
+      top:0; left:0; right:0; bottom:0;
+      background:rgba(0,0,0,0.9);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+      z-index:300;
+      cursor:zoom-out;
+    }
+    .lightbox.visible{ display:flex; }
+    .lightbox img{
+      max-width:100%;
+      max-height:100%;
+      object-fit:contain;
+      border-radius:2px;
+    }
+    .lightbox-close{
+      position:absolute;
+      top:14px;
+      right:16px;
+      width:40px;
+      height:40px;
+      border-radius:50%;
+      border:none;
+      background:rgba(255,255,255,0.18);
+      color:#fff;
+      font-size:20px;
+      line-height:1;
+      cursor:pointer;
+    }
+  </style>
+  <div class="lightbox" id="lightbox" role="dialog" aria-label="Locandina ingrandita">
+    <button class="lightbox-close" id="lightbox-close" aria-label="Chiudi">✕</button>
+    <img id="lightbox-img" alt="Locandina ingrandita">
+  </div>
+  <script>
+  (function () {
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const list = document.getElementById('list');
+    if (!lightbox || !lightboxImg || !list) return;
+
+    function openLightbox(src) {
+      lightboxImg.src = src;
+      lightbox.classList.add('visible');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeLightbox() {
+      lightbox.classList.remove('visible');
+      lightboxImg.removeAttribute('src');
+      document.body.style.overflow = '';
+    }
+
+    // Fase "capture": scatta PRIMA del click sulla card, così toccare la
+    // locandina la ingrandisce senza chiudere i dettagli dell'evento.
+    list.addEventListener('click', function (ev) {
+      const img = ev.target.closest && ev.target.closest('.card-image');
+      if (!img) return;
+      ev.stopPropagation();
+      try { if (typeof track === 'function') track('ingrandisci_locandina'); } catch (err) {}
+      openLightbox(img.currentSrc || img.src);
+    }, true);
+
+    lightbox.addEventListener('click', closeLightbox);
+    document.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Escape') closeLightbox();
+    });
+  })();
+  </script>
+  <!-- ==== fine blocco locandine ==== -->
+  <!-- ==== RICERCA: lente che si allarga in un ovale (stile Google) → testo + giorno + luoghi (incollato prima di </body>) ==== -->
+  <style>
+    header{ position:relative; }
+
+    /* Ovale in alto a destra: chiuso è un cerchio con la lente,
+       aperto si allarga verso sinistra e mostra "Cerca un evento…" */
+    .search-pill{
+      position:absolute;
+      top:-3px;
+      right:0;
+      z-index:5;
+      width:40px;
+      height:40px;
+      display:flex;
+      align-items:center;
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:100px;
+      overflow:hidden;
+      transition:width 0.28s ease, border-color 0.2s ease;
+    }
+    .search-pill:hover{ border-color:var(--muted); }
+    .search-pill.open{
+      width:100%;
+      border-color:var(--ink);
+    }
+    .search-lens{
+      flex-shrink:0;
+      width:38px;
+      height:38px;
+      border:none;
+      background:none;
+      color:var(--ink);
+      padding:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+    }
+    .search-lens svg{ width:19px; height:19px; display:block; }
+
+    .search-input{
+      flex:1;
+      min-width:0;
+      height:38px;
+      border:none;
+      outline:none;
+      background:transparent;
+      font-family:'Inter',sans-serif;
+      font-size:16px; /* 16px evita lo zoom automatico su iPhone */
+      color:var(--ink);
+      padding:0 4px 0 0;
+      -webkit-appearance:none;
+      appearance:none;
+    }
+    .search-input::-webkit-search-cancel-button{ display:none; }
+
+    /* giorno: icona calendario (o la data scelta); sopra c'è il vero campo data, invisibile */
+    .search-cal{
+      position:relative;
+      flex-shrink:0;
+      height:30px;
+      min-width:30px;
+      padding:0 8px;
+      margin-right:2px;
+      border-radius:100px;
+      color:var(--muted);
+      font-size:13px;
+      font-weight:600;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:5px;
+      white-space:nowrap;
+    }
+    .search-cal svg{ width:16px; height:16px; display:block; flex-shrink:0; }
+    .search-cal.has-date{
+      background:var(--red);
+      color:#fff;
+    }
+    .search-date{
+      position:absolute;
+      top:0; left:0;
+      width:100%;
+      height:100%;
+      opacity:0;
+      font-size:16px;
+      cursor:pointer;
+      border:none;
+      padding:0;
+    }
+
+    .search-clear{
+      flex-shrink:0;
+      width:30px;
+      height:30px;
+      margin-right:5px;
+      border:none;
+      border-radius:50%;
+      background:var(--line);
+      color:var(--ink);
+      font-size:12px;
+      line-height:1;
+      cursor:pointer;
+    }
+
+    /* da chiuso, tutto tranne la lente è nascosto (e non raggiungibile con Tab) */
+    .search-pill:not(.open) .search-input,
+    .search-pill:not(.open) .search-cal,
+    .search-pill:not(.open) .search-clear{
+      visibility:hidden;
+    }
+
+    /* mentre la ricerca è aperta il logo lascia spazio all'ovale */
+    header .logo{ transition:opacity 0.2s ease; }
+    header.search-open .logo{ opacity:0; pointer-events:none; }
+
+    .search-count{
+      font-size:13px;
+      color:var(--muted);
+      margin:-8px 2px 14px;
+    }
+    .search-count:empty{ display:none; }
+
+    /* scorciatoie: Weekend + luoghi. Una sola riga che scorre di lato col dito */
+    .search-chips{
+      display:none;
+      gap:8px;
+      margin:-6px -20px 14px;   /* esce dai margini della pagina così lo scorrimento arriva al bordo */
+      padding:0 20px 2px;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
+    }
+    .search-chips::-webkit-scrollbar{ display:none; }
+    .search-chips.show{ display:flex; }
+    .search-chip{
+      flex-shrink:0;
+      background:none;
+      border:1px solid var(--line);
+      color:var(--ink);
+      font-family:'Inter',sans-serif;
+      font-size:13px;
+      font-weight:600;
+      padding:6px 14px;
+      border-radius:100px;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+    .search-chip:hover{ border-color:var(--muted); }
+    .search-chip.active{
+      background:var(--ink);
+      border-color:var(--ink);
+      color:var(--paper);
+    }
+    /* parola cercata, evidenziata nei risultati */
+    mark.search-hit{
+      background:#FFE98A;
+      color:inherit;
+      border-radius:2px;
+      padding:0 1px;
+    }
+    .search-chip-sep{
+      flex-shrink:0;
+      width:1px;
+      background:var(--line);
+      margin:2px 2px;
+    }
+  </style>
+  <script>
+  (function () {
+    // Metti false se NON vuoi registrare su Umami cosa cercano le persone
+    const TRACK_SEARCHES = true;
+
+    // ------------------------------------------------------------------
+    // PILLOLE: per aggiungerne o toglierne basta modificare questo elenco.
+    //   type 'time'  → filtro sul tempo
+    //   type 'place' → filtro sul luogo: "re" è confrontata con il luogo
+    //                  dell'evento, già in minuscolo e senza accenti
+    // ------------------------------------------------------------------
+    // "Cubi" = luoghi con "cubo/cubi" nel nome, il Ponte Pietro Bucci, e le aule con
+    // codice tipo 5C3 o 32B1 (numero + lettera + numero: il numero iniziale è il cubo).
+    // Il codice viene tradotto in "cubo N" da placeKey() più sotto.
+    const CUBI_RE = /\bcub[oi]\b|\bponte\b.*\bbucci\b/;
+
+    const CHIPS = [
+      { k: 'weekend',        label: 'Weekend',           type: 'time' },
+      { k: 'tau',            label: 'TAU',               type: 'place', re: /teatro auditorium|\btau\b/ },
+      { k: 'cubi',           label: 'Cubi',              type: 'place', re: CUBI_RE },
+      { k: 'aulamagna',      label: 'Aula Magna',        type: 'place', re: /aula magna/ },
+      { k: 'online',         label: 'Online',            type: 'place', re: /\bonline\b/ },
+      { k: 'vermicelli',     label: 'Piazza Vermicelli', type: 'place', re: /vermicelli/ },
+      { k: 'universityclub', label: 'University Club',   type: 'place', re: /university club/ },
+    ];
+
+    // Sinonimi per il testo scritto nella barra: chi scrive "tau" trova anche
+    // "Teatro Auditorium Unical" (ma NON il Piccolo Teatro), "cubo" e "cubi" sono lo stesso.
+    const SYNONYMS = {
+      tau:  /\btau\b|teatro auditorium/,
+      cubo: CUBI_RE,
+      cubi: CUBI_RE,
+    };
+
+    // Come evidenziare i sinonimi nel testo dei risultati (versione più corta, senza "ponte bucci")
+    const HILITE = {
+      tau:  /\btau\b|teatro auditorium/,
+      cubo: /\bcub[oi]\b/,
+      cubi: /\bcub[oi]\b/,
+    };
+
+    // ------------------------------------------------------------------
+    // "PORTAMI LÌ": luoghi per cui la card mostra il pulsante del navigatore.
+    //   re  → confrontata con il luogo dell'evento (minuscolo, senza accenti)
+    //   q   → testo cercato su Google Maps / Apple Maps
+    //   lat, lng (facoltativi) → se un luogo non viene trovato bene dal nome, metti le
+    //                            coordinate precise qui e vengono usate al posto di q
+    // I luoghi non elencati (cubi, aule, online…) non hanno il pulsante.
+    // ------------------------------------------------------------------
+    const NAV = [
+      { re: /teatro auditorium|\btau\b/,       q: 'Teatro Auditorium Unical, Arcavacata di Rende' },
+      { re: /piccolo teatro/,                  q: 'Piccolo Teatro Unical, Arcavacata di Rende' },
+      { re: /aula magna/,                      q: 'Aula Magna, Università della Calabria, Arcavacata di Rende' },
+      { re: /university club/,                q: 'University Club, Università della Calabria, Arcavacata di Rende' },
+      { re: /centro congressi/,                q: 'Centro Congressi, Università della Calabria, Arcavacata di Rende' },
+      { re: /vermicelli/,                      q: 'Piazza Vermicelli, Università della Calabria, Arcavacata di Rende' },
+      { re: /\bponte\b.*\bbucci\b/,            q: 'Ponte Pietro Bucci, Università della Calabria, Arcavacata di Rende' },
+      { re: /polifunzionale/,                  q: 'Polifunzionale, Università della Calabria, Arcavacata di Rende' },
+      { re: /cinema campus/,                   q: 'Cinema Campus, Università della Calabria, Arcavacata di Rende' },
+      { re: /rimuseum/,                        q: 'RiMuseum, Università della Calabria, Arcavacata di Rende' },
+    ];
+
+    const tabs = document.getElementById('tabs');
+    const header = document.querySelector('header');
+    if (!tabs || !header || typeof render !== 'function' || typeof getBuckets !== 'function') return;
+
+    // ---------- interfaccia ----------
+    const pill = document.createElement('div');
+    pill.className = 'search-pill';
+    pill.innerHTML =
+      '<button class="search-lens" id="search-lens" type="button" aria-label="Cerca eventi" aria-expanded="false">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' +
+        '<circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>' +
+      '</button>' +
+      '<input class="search-input" id="search-input" type="search" placeholder="Cerca un evento…" ' +
+        'autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Cerca eventi">' +
+      '<label class="search-cal" id="search-cal" title="Scegli un giorno">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+        '<rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/>' +
+        '<line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></svg>' +
+        '<span id="search-cal-label"></span>' +
+        '<input class="search-date" id="search-date" type="date" aria-label="Filtra per giorno">' +
+      '</label>' +
+      '<button class="search-clear" id="search-clear" type="button" aria-label="Cancella o chiudi">✕</button>';
+    header.appendChild(pill);
+
+    const count = document.createElement('div');
+    count.className = 'search-count';
+    tabs.insertAdjacentElement('beforebegin', count);
+
+    const chips = document.createElement('div');
+    chips.className = 'search-chips';
+    chips.innerHTML = CHIPS.map((c, i) =>
+      '<button type="button" class="search-chip" data-k="' + c.k + '">' + c.label + '</button>' +
+      (i === 0 ? '<div class="search-chip-sep"></div>' : '')
+    ).join('');
+    count.insertAdjacentElement('beforebegin', chips);
+
+    const lens = document.getElementById('search-lens');
+    const input = document.getElementById('search-input');
+    const dateInput = document.getElementById('search-date');
+    const calBox = document.getElementById('search-cal');
+    const calLabel = document.getElementById('search-cal-label');
+    const clearBtn = document.getElementById('search-clear');
+    const listEl = document.getElementById('list');
+
+    // quick = intervallo di giorni (Weekend), place = pillola di luogo attiva
+    const S = { active: false, lastTab: 'oggi', results: [], quick: null, place: null };
+
+    // ---------- utilità ----------
+    // minuscole e senza accenti: "universita" trova "università"
+    function norm(s) {
+      return String(s || '')
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .toLowerCase();
+    }
+    function stripTags(s) {
+      return String(s || '').replace(/<[^>]*>/g, ' ');
+    }
+    function dayStart(d) {
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    }
+    // Luogo normalizzato + il cubo ricavato dal codice aula:
+    // "Aula 5C3" → "aula 5c3 cubo 5", "Aula consolidata 32B1" → "... cubo 32"
+    function placeKey(e) {
+      const p = norm(stripTags(e.place));
+      const m = p.match(/\b(\d{1,2})[a-d]\d{1,2}\b/);
+      return m && !/\bcub[oi]\b/.test(p) ? p + ' cubo ' + m[1] : p;
+    }
+    function haystack(e) {
+      const subs = (e.sub_events || [])
+        .map(x => [x.title, x.place, x.description].join(' '))
+        .join(' ');
+      return norm(stripTags([e.title, e.description, subs].join(' '))) + ' ' + placeKey(e);
+    }
+    // una parola scritta dall'utente → funzione che dice se un testo la contiene
+    function wordMatcher(w) {
+      const re = SYNONYMS[w];
+      return re ? (text => re.test(text)) : (text => text.includes(w));
+    }
+
+    // distanza di modifica tra due parole (conta come 1 anche lo scambio di due lettere:
+    // "taetro" → "teatro" = 1)
+    function editDist(a, b) {
+      const al = a.length, bl = b.length;
+      const d = [];
+      for (let i = 0; i <= al; i++) { d[i] = [i]; }
+      for (let j = 0; j <= bl; j++) { d[0][j] = j; }
+      for (let i = 1; i <= al; i++) {
+        for (let j = 1; j <= bl; j++) {
+          const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+          d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost);
+          if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+            d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+          }
+        }
+      }
+      return d[al][bl];
+    }
+    // versione "tollerante": usata solo se la ricerca esatta non trova niente.
+    // Parole corte (< 4 lettere) e sinonimi restano esatti.
+    function fuzzyMatcher(w) {
+      if (w.length < 4 || SYNONYMS[w]) return wordMatcher(w);
+      const maxd = w.length >= 8 ? 2 : 1;
+      return text => {
+        if (text.includes(w)) return true;
+        return text.split(/[^a-z0-9]+/).some(tok =>
+          Math.abs(tok.length - w.length) <= maxd && editDist(tok, w) <= maxd);
+      };
+    }
+
+    function computeResults() {
+      const words = norm(input.value).split(/\s+/).filter(Boolean);
+      let matchers = words.map(wordMatcher);
+      S.fuzzy = false;
+      const dateVal = dateInput.value; // "YYYY-MM-DD" oppure ""
+      const now = new Date();
+      const startToday = dayStart(now);
+      const startWeekAgo = new Date(startToday);
+      startWeekAgo.setDate(startToday.getDate() - 7);
+
+      // intervallo di giorni richiesto: un giorno scelto, oppure il weekend
+      let from = null, to = null;
+      if (dateVal) {
+        const p = dateVal.split('-').map(Number);
+        from = to = new Date(p[0], p[1] - 1, p[2]);
+      } else if (S.quick) {
+        from = S.quick.from;
+        to = S.quick.to;
+      }
+
+      function findWith(ms) { return events.filter(e => {
+        if (from) {
+          // l'evento tocca l'intervallo (anche se dura più giorni)
+          const s = dayStart(e.dateObj);
+          const en = e.endDateObj ? dayStart(e.endDateObj) : s;
+          if (to < s || from > en) return false;
+        } else if (e.dateObj < startWeekAgo) {
+          return false; // senza data scelta: da 7 giorni fa in avanti
+        }
+        if (S.place && !S.place.re.test(placeKey(e))) return false;
+        if (ms.length) {
+          const h = haystack(e);
+          if (!ms.every(m => m(h))) return false;
+        }
+        return true;
+      }); }
+
+      let found = findWith(matchers);
+      // nessun risultato esatto? riprova tollerando piccoli errori di battitura
+      if (!found.length && words.some(w => w.length >= 4)) {
+        const fz = words.map(fuzzyMatcher);
+        const alt = findWith(fz);
+        if (alt.length) { found = alt; matchers = fz; S.fuzzy = true; }
+      }
+
+      // rilevanza: parola nel titolo (3) > nel luogo (2) > solo in descrizione/programma (1)
+      function score(e) {
+        if (!matchers.length) return 0;
+        const t = norm(stripTags(e.title));
+        const p = placeKey(e);
+        let s = 0;
+        matchers.forEach(m => { s += m(t) ? 3 : (m(p) ? 2 : 1); });
+        return s;
+      }
+      const scores = new Map(found.map(e => [e, score(e)]));
+
+      // Due gruppi che non si mescolano mai: prima i futuri, poi i passati in fondo.
+      // Dentro ciascun gruppo: più rilevanti per primi, a parità per data.
+      const upcoming = found.filter(e => e.dateObj >= startToday)
+        .sort((a, b) => (scores.get(b) - scores.get(a)) || (a.dateObj - b.dateObj));
+      const past = found.filter(e => e.dateObj < startToday)
+        .sort((a, b) => (scores.get(b) - scores.get(a)) || (b.dateObj - a.dateObj));
+      return upcoming.concat(past);
+    }
+
+    // ---------- aggancio al render esistente (senza modificarlo) ----------
+    const origGetBuckets = window.getBuckets;
+    window.getBuckets = function () {
+      const b = origGetBuckets();
+      b.cerca = S.active ? computeResults() : [];
+      S.results = b.cerca;
+      return b;
+    };
+
+    if (typeof emptyMessages === 'object') {
+      emptyMessages.cerca = { text: 'Nessun evento trovato. Prova con un’altra parola o un altro giorno.', jump: null, cta: null };
+    }
+
+    const origRender = window.render;
+    window.render = function (tab) {
+      if (S.active && tab !== 'cerca') tab = 'cerca';
+      origRender(tab);
+      if (tab === 'cerca') afterSearchRender();
+      addNavButtons(); // vale per tutte le schede, non solo per la ricerca
+    };
+
+    // ---------- pulsante "Portami lì" ----------
+    const NAV_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>';
+
+    function navFor(e) {
+      const p = norm(stripTags(e.place));
+      if (!p || /altri luoghi|mappa|\bonline\b/.test(p)) return null;
+      return NAV.find(n => n.re.test(p)) || null;
+    }
+    function isApple() {
+      return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    }
+    function navUrl(n) {
+      const dest = (n.lat != null && n.lng != null) ? n.lat + ',' + n.lng : n.q;
+      return isApple()
+        ? 'https://maps.apple.com/?daddr=' + encodeURIComponent(dest)
+        : 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(dest);
+    }
+    function addNavButtons() {
+      listEl.querySelectorAll('.card').forEach(card => {
+        if (card.querySelector('.nav-btn')) return;
+        const ev = events.find(x => String(x.id) === card.dataset.eventId);
+        const n = ev && navFor(ev);
+        const holder = card.querySelector('.card-action-buttons');
+        if (!n || !holder) return;
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'share-btn nav-btn'; // stesso aspetto del pulsante condividi
+        b.title = 'Portami lì';
+        b.setAttribute('aria-label', 'Portami lì');
+        b.innerHTML = NAV_ICON;
+        b.addEventListener('click', (evt) => {
+          evt.stopPropagation();
+          try { if (typeof track === 'function') track('click_portami_li', { evento: ev.title, luogo: ev.place }); } catch (err) {}
+          window.open(navUrl(n), '_blank', 'noopener');
+        });
+        holder.insertBefore(b, holder.firstChild);
+      });
+    }
+
+    function afterSearchRender() {
+      const now = new Date();
+      // niente "Ricordamelo" per eventi già conclusi
+      listEl.querySelectorAll('.card').forEach(card => {
+        const ev = events.find(x => String(x.id) === card.dataset.eventId);
+        if (ev && isElapsed(ev, now)) {
+          const rb = card.querySelector('.remind-btn');
+          if (rb) rb.remove();
+        }
+      });
+      // riga "Già passati" tra i futuri e i passati (solo se ci sono entrambi)
+      const startToday = dayStart(now);
+      const cards = Array.from(listEl.querySelectorAll('.card'));
+      const firstPast = cards.find(card => {
+        const ev = events.find(x => String(x.id) === card.dataset.eventId);
+        return ev && ev.dateObj < startToday;
+      });
+      if (firstPast && firstPast !== cards[0]) {
+        const sep = document.createElement('div');
+        sep.className = 'day-separator';
+        sep.textContent = 'Già passati';
+        firstPast.parentNode.insertBefore(sep, firstPast);
+      }
+      // nessun risultato: aggiungi il tasto per cancellare
+      const empty = listEl.querySelector('.empty');
+      if (empty && !empty.querySelector('button')) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = 'Cancella la ricerca';
+        b.addEventListener('click', () => { resetSearch(true); input.focus(); });
+        empty.appendChild(b);
+      }
+      const n = S.results.length;
+      count.textContent = (n === 1 ? '1 evento trovato' : n + ' eventi trovati')
+        + (S.fuzzy ? ' · risultati simili a quello che hai scritto' : '');
+      highlightHits();
+    }
+
+    // ---------- evidenziazione delle parole cercate ----------
+    function highlightHits() {
+      const words = norm(input.value).split(/\s+/).filter(Boolean);
+      if (!words.length) return;
+      const regs = words.map(w => HILITE[w]
+        ? new RegExp(HILITE[w].source, 'g')
+        : new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'));
+      listEl.querySelectorAll('.card-title, .card-place, .card-description, .sub-name, .sub-place, .sub-desc')
+        .forEach(el => markIn(el, regs));
+    }
+
+    // Cerca nei nodi di testo di un elemento (senza toccare l'HTML) e avvolge le parole
+    // trovate in <mark>. Ignora maiuscole e accenti come fa la ricerca.
+    function markIn(el, regs) {
+      const nodes = [];
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+
+      nodes.forEach(node => {
+        const t = node.nodeValue;
+        let n = '';
+        const map = []; // posizione nel testo normalizzato → posizione nel testo originale
+        for (let i = 0; i < t.length; i++) {
+          const c = t[i].normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+          for (const ch of c) { n += ch; map.push(i); }
+        }
+
+        const ranges = [];
+        regs.forEach(re => {
+          re.lastIndex = 0;
+          let m;
+          while ((m = re.exec(n)) !== null) {
+            if (m[0].length === 0) { re.lastIndex++; continue; }
+            ranges.push([map[m.index], map[m.index + m[0].length - 1] + 1]);
+          }
+        });
+        if (!ranges.length) return;
+
+        // unisce gli intervalli che si sovrappongono
+        ranges.sort((a, b) => a[0] - b[0]);
+        const merged = [ranges[0].slice()];
+        for (let i = 1; i < ranges.length; i++) {
+          const last = merged[merged.length - 1];
+          if (ranges[i][0] <= last[1]) last[1] = Math.max(last[1], ranges[i][1]);
+          else merged.push(ranges[i].slice());
+        }
+
+        const frag = document.createDocumentFragment();
+        let pos = 0;
+        merged.forEach(([s, e]) => {
+          if (s > pos) frag.appendChild(document.createTextNode(t.slice(pos, s)));
+          const mk = document.createElement('mark');
+          mk.className = 'search-hit';
+          mk.textContent = t.slice(s, e);
+          frag.appendChild(mk);
+          pos = e;
+        });
+        if (pos < t.length) frag.appendChild(document.createTextNode(t.slice(pos)));
+        node.parentNode.replaceChild(frag, node);
+      });
+    }
+
+    // ---------- stato ricerca ----------
+    // mostra la data scelta dentro l'ovale (es. "21 nov"), oppure solo l'icona
+    function updateDateLabel() {
+      const v = dateInput.value;
+      if (v) {
+        const p = v.split('-').map(Number);
+        const d = new Date(p[0], p[1] - 1, p[2]);
+        calLabel.textContent = d.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
+        calBox.classList.add('has-date');
+      } else {
+        calLabel.textContent = '';
+        calBox.classList.remove('has-date');
+      }
+    }
+
+    // evidenzia le pillole attive
+    function updateChips() {
+      chips.querySelectorAll('.search-chip').forEach(btn => {
+        const k = btn.dataset.k;
+        const on = (k === 'weekend' && !!S.quick) || (!!S.place && S.place.k === k);
+        btn.classList.toggle('active', on);
+      });
+    }
+
+    function hasFilters() {
+      return !!(input.value.trim() || dateInput.value || S.quick || S.place);
+    }
+
+    // intervallo del prossimo weekend (sabato e domenica; se è già weekend, da oggi)
+    function weekendRange() {
+      const t = dayStart(new Date());
+      const add = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+      const dow = t.getDay(); // 0 = domenica, 6 = sabato
+      if (dow === 6) return { from: t, to: add(t, 1) };
+      if (dow === 0) return { from: t, to: t };
+      const sat = add(t, 6 - dow);
+      return { from: sat, to: add(sat, 1) };
+    }
+
+    chips.addEventListener('click', (ev) => {
+      const btn = ev.target.closest('.search-chip');
+      if (!btn) return;
+      const cfg = CHIPS.find(c => c.k === btn.dataset.k);
+      if (!cfg) return;
+      let activated;
+      if (cfg.type === 'time') {
+        activated = !S.quick;
+        S.quick = activated ? weekendRange() : null;
+        if (activated) dateInput.value = ''; // il weekend sostituisce il giorno scelto a mano
+      } else {
+        activated = !(S.place && S.place.k === cfg.k);
+        S.place = activated ? cfg : null; // una pillola di luogo alla volta
+      }
+      if (activated && TRACK_SEARCHES) {
+        try { if (typeof track === 'function') track('cerca_scorciatoia', { quale: cfg.k }); } catch (err) {}
+      }
+      startOrUpdate();
+    });
+
+    function startOrUpdate() {
+      updateDateLabel();
+      updateChips();
+      if (!hasFilters()) { resetSearch(true); return; }
+      if (!S.active) {
+        S.active = true;
+        const cur = document.querySelector('.tab.active');
+        if (cur) S.lastTab = cur.dataset.tab;
+        tabs.style.display = 'none';
+      }
+      render('cerca');
+      scheduleTrack();
+    }
+
+    // svuota tutto e chiude la modalità ricerca; redraw=false: non ridisegno
+    // (lo farà il gestore del click che ha causato la chiusura)
+    function resetSearch(redraw) {
+      input.value = '';
+      dateInput.value = '';
+      S.quick = null;
+      S.place = null;
+      updateDateLabel();
+      updateChips();
+      count.textContent = '';
+      if (!S.active) return;
+      S.active = false;
+      if (!inPastView) tabs.style.display = 'flex';
+      if (redraw) render(inPastView ? 'passati' : S.lastTab);
+    }
+
+    // ---------- apertura / chiusura dell'ovale ----------
+    function isOpen() { return pill.classList.contains('open'); }
+    function openPill() {
+      pill.classList.add('open');
+      chips.classList.add('show');
+      header.classList.add('search-open');
+      lens.setAttribute('aria-expanded', 'true');
+      // aspetta l'animazione, poi porta il cursore nel campo (apre la tastiera)
+      setTimeout(() => input.focus(), 120);
+    }
+    function closePill(redraw) {
+      resetSearch(redraw);
+      pill.classList.remove('open');
+      chips.classList.remove('show');
+      header.classList.remove('search-open');
+      lens.setAttribute('aria-expanded', 'false');
+      input.blur();
+    }
+
+    lens.addEventListener('click', () => {
+      if (!isOpen()) { openPill(); return; }
+      input.focus();
+    });
+    // ✕: se c'è qualcosa scritto/scelto lo cancella, altrimenti richiude l'ovale
+    clearBtn.addEventListener('click', () => {
+      if (hasFilters()) { resetSearch(true); input.focus(); }
+      else closePill(true);
+    });
+
+    // ---------- statistiche (Umami) ----------
+    let trackTimer = null;
+    let lastTracked = '';
+    function scheduleTrack() {
+      if (!TRACK_SEARCHES) return;
+      clearTimeout(trackTimer);
+      trackTimer = setTimeout(() => {
+        const q = norm(input.value).trim();
+        const d = dateInput.value;
+        const key = q + '|' + d;
+        if ((q.length < 2 && !d) || key === lastTracked) return;
+        lastTracked = key;
+        try {
+          if (typeof track === 'function') {
+            track('cerca', { testo: q || '(solo data)', data: d || '', risultati: S.results.length });
+          }
+        } catch (err) {}
+      }, 1500);
+    }
+
+    // ---------- eventi ----------
+    let typeTimer = null;
+    input.addEventListener('input', () => {
+      clearTimeout(typeTimer);
+      typeTimer = setTimeout(startOrUpdate, 150);
+    });
+    dateInput.addEventListener('change', () => {
+      if (dateInput.value) S.quick = null; // il giorno scelto a mano sostituisce il weekend
+      startOrUpdate();
+    });
+    // su desktop il campo data invisibile si apre solo con questo
+    dateInput.addEventListener('click', () => {
+      try { if (dateInput.showPicker) dateInput.showPicker(); } catch (err) {}
+    });
+    // Toccando fuori dall'ovale, se è vuoto (niente scritto né scelto), si richiude da solo.
+    // Se c'è una ricerca in corso non lo tocca, così i risultati restano.
+    document.addEventListener('click', (ev) => {
+      if (!isOpen() || hasFilters()) return;
+      if (pill.contains(ev.target) || chips.contains(ev.target)) return;
+      closePill(true);
+    });
+    input.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape') closePill(true);
+      if (ev.key === 'Enter') input.blur(); // chiude la tastiera sul telefono
+    });
+
+    // Toccando una scheda (Oggi / Settimana / Prossimamente) o "Cosa mi sono perso"
+    // la ricerca si chiude e il gestore esistente fa il resto.
+    document.querySelectorAll('.tab').forEach(btn => {
+      btn.addEventListener('click', () => closePill(false), true);
+    });
+    const pastBtnEl = document.getElementById('past-btn');
+    if (pastBtnEl) pastBtnEl.addEventListener('click', () => closePill(false), true);
+  })();
+  </script>
+  <!-- ==== fine blocco ricerca ==== -->
+<!-- ==== SCOPRI (stile Instagram): incollare in index.html subito prima di </body>, dopo il blocco ricerca ==== -->
+<style>
+  .toast{ z-index:500; }
+  .wrap{ padding-bottom:110px; }
+  .fd-fab{
+    position:fixed; left:50%; transform:translateX(-50%);
+    bottom:calc(18px + env(safe-area-inset-bottom,0px));
+    z-index:90; background:var(--ink); color:#fff; border:none;
+    font-family:'Inter',sans-serif; font-weight:700; font-size:14px;
+    padding:12px 20px; border-radius:100px; cursor:pointer;
+    box-shadow:0 6px 20px rgba(0,0,0,.3);
+  }
+  .fd{ position:fixed; inset:0; background:#000; z-index:300; display:none; color:#fff; font-family:'Inter',sans-serif; }
+  .fd.on{ display:block; }
+  .fd-feed{ position:absolute; inset:0; overflow-y:auto; scroll-snap-type:y mandatory; overscroll-behavior:contain; scrollbar-width:none; }
+  .fd-feed::-webkit-scrollbar{ display:none; }
+  .fd-slide{ position:relative; height:100%; scroll-snap-align:start; scroll-snap-stop:always; overflow:hidden; touch-action:manipulation; -webkit-user-select:none; user-select:none; }
+  .fd-bg{ position:absolute; inset:-20px; width:calc(100% + 40px); height:calc(100% + 40px); object-fit:cover; filter:blur(24px) brightness(.5); }
+  .fd-bg.none{ background:linear-gradient(155deg,#3a1113,#1B1B1D 70%); filter:none; }
+  .fd-img{ position:absolute; left:0; top:64px; width:100%; height:calc(100% - 290px); object-fit:contain; }
+  .fd-shade{ position:absolute; inset:0; background:linear-gradient(180deg,rgba(0,0,0,.35) 0%,rgba(0,0,0,0) 22%,rgba(0,0,0,0) 45%,rgba(0,0,0,.9) 100%); }
+  .fd-top{ position:absolute; top:0; left:0; right:0; z-index:6; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:calc(12px + env(safe-area-inset-top,0px)) 14px 0; }
+  .fd-pillbtn{ background:rgba(0,0,0,.45); color:#fff; border:1px solid rgba(255,255,255,.3); border-radius:100px; font:700 13px 'Inter',sans-serif; padding:8px 14px; cursor:pointer; }
+  .fd-seg{ display:flex; gap:4px; background:rgba(0,0,0,.45); border-radius:100px; padding:3px; }
+  .fd-seg button{ background:none; border:none; color:#ddd; font:700 13px 'Inter',sans-serif; padding:6px 13px; border-radius:100px; cursor:pointer; }
+  .fd-seg button.on{ background:#fff; color:#000; }
+  .fd-side{ position:absolute; right:10px; bottom:calc(26px + env(safe-area-inset-bottom,0px)); z-index:6; display:flex; flex-direction:column; align-items:center; gap:18px; }
+  .fd-act{ background:none; border:none; color:#fff; display:flex; flex-direction:column; align-items:center; gap:3px; font:600 11px 'Inter',sans-serif; cursor:pointer; text-decoration:none; padding:0; }
+  .fd-act svg{ width:30px; height:30px; filter:drop-shadow(0 1px 4px rgba(0,0,0,.6)); }
+  .fd-act.liked svg{ fill:#ff3040; stroke:#ff3040; }
+  .fd-act.on svg{ fill:#fff; }
+  .fd-info{ position:absolute; left:16px; right:78px; bottom:calc(26px + env(safe-area-inset-bottom,0px)); z-index:6; }
+  .fd-badge{ display:inline-block; background:var(--red); font-weight:700; font-size:12.5px; padding:5px 11px; border-radius:100px; margin-bottom:10px; }
+  .fd-title{ font-family:'Archivo Black',sans-serif; font-size:21px; line-height:1.2; margin-bottom:6px; text-shadow:0 2px 10px rgba(0,0,0,.6); }
+  .fd-place{ font-size:14px; opacity:.92; margin-bottom:8px; }
+  .fd-desc{ font-size:14px; line-height:1.45; opacity:.95; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; cursor:pointer; }
+  .fd-desc.open{ display:block; max-height:34vh; overflow-y:auto; }
+  .fd-burst{ position:absolute; left:50%; top:42%; width:120px; height:120px; margin:-60px 0 0 -60px; z-index:7; pointer-events:none; opacity:0; fill:#ff3040; filter:drop-shadow(0 4px 14px rgba(0,0,0,.5)); }
+  .fd-burst.go{ animation:fdburst .75s ease-out; }
+  @keyframes fdburst{ 0%{opacity:0;transform:scale(.3)} 25%{opacity:1;transform:scale(1.15)} 60%{opacity:1;transform:scale(.95)} 100%{opacity:0;transform:scale(1.1)} }
+  .fd-empty{ height:100%; display:flex; align-items:center; justify-content:center; text-align:center; padding:30px; line-height:1.5; color:#ccc; }
+</style>
+
+<button class="fd-fab" id="fd-fab">🎬 Scopri</button>
+<div class="fd" id="fd">
+  <div class="fd-top">
+    <button class="fd-pillbtn" id="fd-close">‹ Lista</button>
+    <div class="fd-seg" id="fd-seg"><button data-m="tutti" class="on">Per te</button><button data-m="salvati">♥ Salvati</button></div>
+  </div>
+  <div class="fd-feed" id="fd-feed"></div>
+</div>
+
+<script>
+(function () {
+  if (typeof events === 'undefined' || typeof remindMe !== 'function') return;
+  const KEY = 'ue_liked';
+  const getLiked = () => { try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { return []; } };
+  const setLiked = a => { try { localStorage.setItem(KEY, JSON.stringify(a)); } catch (e) {} };
+  // restituisce true se ora è piaciuto. force 'on' = non toglie mai il cuore (doppio tap)
+  function toggleLike(id, force) {
+    let a = getLiked(); const s = String(id); const has = a.includes(s);
+    if (has && force === 'on') return true;
+    a = has ? a.filter(x => x !== s) : a.concat(s);
+    setLiked(a); return !has;
+  }
+
+  const I = {
+    heart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg>',
+    bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>',
+    send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>',
+    nav: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+    link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>'
+  };
+
+  const fd = document.getElementById('fd');
+  const feed = document.getElementById('fd-feed');
+  const seg = document.getElementById('fd-seg');
+  let mode = 'tutti';
+
+  function currentList() {
+    const now = new Date();
+    if (mode === 'salvati') {
+      const L = getLiked();
+      return events.filter(e => L.includes(String(e.id))).sort((a, b) => a.dateObj - b.dateObj);
+    }
+    return events.filter(e => eventCutoff(e) >= now);
+  }
+
+  function mapsUrl(e) {
+    const p = String(e.place || '').replace(/<[^>]*>/g, '').trim();
+    if (!p || /online|altri luoghi|mappa/i.test(p)) return null;
+    return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(p + ', Università della Calabria, Arcavacata di Rende');
+  }
+
+  function slideFor(e, now) {
+    const s = document.createElement('div');
+    s.className = 'fd-slide';
+    s.dataset.id = e.id;
+    const live = isLive(e, now);
+    const liked = isLiked(e.id);
+    const reminded = !!localStorage.getItem('ue_reminded_' + e.id);
+    const desc = e.description ? String(e.description).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() : '';
+    const maps = mapsUrl(e);
+    const src = e.link && e.link !== '#' ? e.link : null;
+    s.innerHTML =
+      (e.image_url ? '<img class="fd-bg" alt="" src="' + e.image_url + '"><img class="fd-img" alt="Locandina" loading="lazy" src="' + e.image_url + '">' : '<div class="fd-bg none"></div>') +
+      '<div class="fd-shade"></div>' +
+      '<svg class="fd-burst" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg>' +
+      '<div class="fd-side">' +
+        '<button class="fd-act fd-like' + (liked ? ' liked' : '') + '" aria-label="Mi piace">' + I.heart + '<span>Salva</span></button>' +
+        '<button class="fd-act fd-rem' + (reminded ? ' on' : '') + '" aria-label="Ricordamelo">' + I.bell + '<span>' + (reminded ? 'Attivo' : 'Ricordamelo') + '</span></button>' +
+        '<button class="fd-act fd-share" aria-label="Condividi">' + I.send + '<span>Condividi</span></button>' +
+        (maps ? '<a class="fd-act fd-nav" target="_blank" rel="noopener" href="' + maps + '" aria-label="Portami lì">' + I.nav + '<span>Portami lì</span></a>' : '') +
+        (src ? '<a class="fd-act fd-src" target="_blank" rel="noopener noreferrer" href="' + src + '" aria-label="Fonte">' + I.link + '<span>Fonte</span></a>' : '') +
+      '</div>' +
+      '<div class="fd-info">' +
+        '<div class="fd-badge">' + (live ? '🔴 LIVE ORA · ' : '') + formatDatePlain(e) + '</div>' +
+        '<div class="fd-title">' + e.title + '</div>' +
+        '<div class="fd-place">📍 ' + e.place + '</div>' +
+        (desc ? '<div class="fd-desc">' + desc + '</div>' : '') +
+      '</div>';
+
+    const likeBtn = s.querySelector('.fd-like');
+    likeBtn.addEventListener('click', () => {
+      const on = toggleLike(e.id);
+      likeBtn.classList.toggle('liked', on);
+      if (on) burst(s);
+      track(on ? 'like_evento' : 'unlike_evento', { evento: e.title });
+    });
+
+    const remBtn = s.querySelector('.fd-rem');
+    const remLab = remBtn.querySelector('span');
+    remBtn.addEventListener('click', () => {
+      track(remBtn.classList.contains('on') ? 'rimuovi_ricordamelo_scopri' : 'click_ricordamelo_scopri', { evento: e.title });
+      // finto "bottone": remindMe scrive testo e classi, noi le traduciamo nel nostro layout
+      const proxy = {
+        set textContent(v) { remLab.textContent = /attivo/i.test(v) && !/Attivo\.\.\./.test(v) ? 'Attivo' : (/Ricordamelo/.test(v) ? 'Ricordamelo' : '…'); },
+        get textContent() { return remLab.textContent; },
+        classList: {
+          add: c => remBtn.classList.add(c === 'active' ? 'on' : c),
+          remove: c => remBtn.classList.remove(c === 'active' ? 'on' : c),
+          contains: c => remBtn.classList.contains(c === 'active' ? 'on' : c)
+        }
+      };
+      remindMe(e.id, proxy);
+    });
+
+    s.querySelector('.fd-share').addEventListener('click', () => { track('click_condividi_scopri', { evento: e.title }); shareEvent(e); });
+    const nv = s.querySelector('.fd-nav');
+    if (nv) nv.addEventListener('click', () => track('click_portami_li', { evento: e.title, luogo: e.place }));
+    return s;
+  }
+
+  function burst(slide) {
+    const b = slide.querySelector('.fd-burst');
+    b.classList.remove('go'); void b.getBoundingClientRect(); b.classList.add('go');
+  }
+
+  // doppio tap = cuore (come su Instagram); un tap sulla descrizione la apre/chiude
+  let lastTap = 0, lastSlide = null;
+  feed.addEventListener('click', ev => {
+    const slide = ev.target.closest('.fd-slide');
+    if (!slide || ev.target.closest('button,a')) return;
+    const t = Date.now();
+    if (lastSlide === slide && t - lastTap < 320) {
+      lastTap = 0;
+      const on = toggleLike(slide.dataset.id, 'on');
+      slide.querySelector('.fd-like').classList.toggle('liked', on);
+      burst(slide);
+      const ev2 = events.find(x => String(x.id) === slide.dataset.id);
+      track('like_doppio_tap', { evento: ev2 ? ev2.title : '' });
+      return;
+    }
+    lastTap = t; lastSlide = slide;
+    const d = ev.target.closest('.fd-desc');
+    if (d) d.classList.toggle('open');
+  });
+
+  function build() {
+    const now = new Date();
+    const list = currentList();
+    feed.innerHTML = '';
+    feed.scrollTop = 0;
+    if (!list.length) {
+      feed.innerHTML = '<div class="fd-empty">' + (mode === 'salvati'
+        ? 'Nessun evento salvato.<br>Fai doppio tap su un evento o tocca ♥ per salvarlo qui.'
+        : 'Nessun evento da scoprire al momento.') + '</div>';
+      return;
+    }
+    list.forEach(e => feed.appendChild(slideFor(e, now)));
+  }
+
+  function openFeed() {
+    fd.classList.add('on');
+    document.body.style.overflow = 'hidden';
+    history.pushState({ fd: 1 }, '');
+    track('apri_scopri');
+    build();
+  }
+  function closeFeed(fromPop) {
+    if (!fd.classList.contains('on')) return;
+    fd.classList.remove('on');
+    document.body.style.overflow = '';
+    if (!fromPop && history.state && history.state.fd) history.back();
+  }
+
+  document.getElementById('fd-fab').addEventListener('click', openFeed);
+  document.getElementById('fd-close').addEventListener('click', () => closeFeed(false));
+  window.addEventListener('popstate', () => closeFeed(true)); // tasto "indietro" di Android
+  seg.addEventListener('click', ev => {
+    const b = ev.target.closest('button[data-m]');
+    if (!b) return;
+    mode = b.dataset.m;
+    seg.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+    track('scopri_scheda', { quale: mode });
+    build();
+  });
+})();
+</script>
+<!-- ==== fine blocco Scopri ==== -->
 </body>
 </html>
