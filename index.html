@@ -2248,6 +2248,7 @@
   const KEY = 'ue_liked';
   const getLiked = () => { try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { return []; } };
   const setLiked = a => { try { localStorage.setItem(KEY, JSON.stringify(a)); } catch (e) {} };
+  const isLiked = id => getLiked().includes(String(id));
   // restituisce true se ora è piaciuto. force 'on' = non toglie mai il cuore (doppio tap)
   function toggleLike(id, force) {
     let a = getLiked(); const s = String(id); const has = a.includes(s);
