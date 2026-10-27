@@ -1060,17 +1060,110 @@
     function showBanner() {
       banner.classList.add('visible');
     }
-
     if (isIOS) {
-      // iOS non ha un popup automatico: mostriamo istruzioni manuali.
-      // Su iOS tutti i browser (Safari, Chrome, Firefox, Edge...) usano lo
-      // stesso motore di Apple e hanno lo stesso pulsante "Condividi",
-      // quindi le istruzioni valgono per tutti.
-      textEl.innerHTML = `<strong>Installa Uni Events</strong>Tocca l'icona Condividi <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M12 2v13"/><path d="M8 6l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg> (in Safari in basso, nei ⋯ in alto su Chrome e altri browser), poi "Aggiungi a Home".`;
-      actionBtn.style.display = 'none';
+      // iOS non permette di aprire il menu Condividi da codice: il bottone "Installa"
+      // mostra quindi una guida a 3 passaggi con una freccia che punta al tasto Condividi.
+      // Safari: tasto in basso. Chrome / Firefox / Edge su iPhone: tasto in alto a destra.
+      const topBar = /CriOS|FxiOS|EdgiOS|OPiOS/.test(ua);
+
+      const shareSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 2v13"/><path d="M8 6l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>`;
+
+      const style = document.createElement('style');
+      style.textContent = `
+        .ios-guide{
+          position:fixed; top:0; left:0; right:0; bottom:0;
+          background:rgba(0,0,0,0.78);
+          display:none; align-items:center; justify-content:center;
+          padding:20px; z-index:250;
+        }
+        .ios-guide.visible{ display:flex; }
+        .ios-guide-card{
+          position:relative;
+          width:100%; max-width:380px;
+          background:var(--paper); color:var(--ink);
+          border-radius:12px; padding:22px 20px 18px;
+          border-top:4px solid var(--red);
+        }
+        .ios-guide-title{
+          font-family:'Archivo Black',sans-serif;
+          font-size:20px; margin:0 0 4px;
+        }
+        .ios-guide-sub{ font-size:14px; color:var(--muted); margin:0 0 16px; }
+        .ios-step{ display:flex; gap:12px; align-items:flex-start; margin-bottom:14px; }
+        .ios-step-n{
+          flex-shrink:0; width:26px; height:26px; border-radius:50%;
+          background:var(--red); color:#fff; font-weight:700; font-size:14px;
+          display:flex; align-items:center; justify-content:center;
+        }
+        .ios-step-t{ font-size:15px; line-height:1.45; }
+        .ios-step-t small{ display:block; color:var(--muted); font-size:13px; margin-top:2px; }
+        .ios-guide-ok{
+          width:100%; margin-top:6px; padding:13px;
+          background:var(--ink); color:var(--paper);
+          border:none; border-radius:8px;
+          font-family:'Inter',sans-serif; font-weight:700; font-size:15px; cursor:pointer;
+        }
+        .ios-guide-arrow{
+          position:fixed; font-size:44px; line-height:1; color:#fff;
+          animation: ios-bounce 1s ease-in-out infinite;
+          pointer-events:none;
+        }
+        .ios-guide-arrow.bottom{ bottom:calc(14px + env(safe-area-inset-bottom, 0px)); left:50%; margin-left:-14px; }
+        .ios-guide-arrow.top{ top:calc(10px + env(safe-area-inset-top, 0px)); right:18px; animation-name: ios-bounce-up; }
+        @keyframes ios-bounce{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(10px); } }
+        @keyframes ios-bounce-up{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-10px); } }
+      `;
+      document.head.appendChild(style);
+
+      const guide = document.createElement('div');
+      guide.className = 'ios-guide';
+      guide.setAttribute('role', 'dialog');
+      guide.setAttribute('aria-label', 'Come installare Uni Events');
+      guide.innerHTML = `
+        <div class="ios-guide-card">
+          <h2 class="ios-guide-title">Installa Uni Events</h2>
+          <p class="ios-guide-sub">Bastano 3 tocchi, e lo apri come un'app.</p>
+          <div class="ios-step">
+            <div class="ios-step-n">1</div>
+            <div class="ios-step-t">Tocca il tasto <strong>Condividi</strong> ${shareSvg}
+              <small>${topBar
+                ? 'È in alto a destra, vicino all\u2019indirizzo (se non lo vedi, tocca \u22ef).'
+                : 'È nella barra in basso (se non lo vedi, tocca \u22ef e poi Condividi).'}</small>
+            </div>
+          </div>
+          <div class="ios-step">
+            <div class="ios-step-n">2</div>
+            <div class="ios-step-t">Scorri il menu e scegli <strong>\u201cAggiungi alla schermata Home\u201d</strong></div>
+          </div>
+          <div class="ios-step">
+            <div class="ios-step-n">3</div>
+            <div class="ios-step-t">Tocca <strong>Aggiungi</strong> in alto a destra</div>
+          </div>
+          <button class="ios-guide-ok" id="ios-guide-ok" type="button">Ho capito</button>
+        </div>
+        <div class="ios-guide-arrow ${topBar ? 'top' : 'bottom'}">${topBar ? '\u2191' : '\u2193'}</div>
+      `;
+      document.body.appendChild(guide);
+
+      function closeGuide() {
+        guide.classList.remove('visible');
+        showBanner();
+      }
+      guide.addEventListener('click', (ev) => {
+        // chiude toccando lo sfondo scuro o "Ho capito", non toccando il pannello
+        if (ev.target === guide || ev.target.id === 'ios-guide-ok') closeGuide();
+      });
+
+      textEl.innerHTML = `<strong>Installa Uni Events</strong>Aggiungilo alla schermata Home per aprirlo come un'app.`;
+      actionBtn.addEventListener('click', () => {
+        track('click_installa_banner_ios');
+        banner.classList.remove('visible');
+        guide.classList.add('visible');
+      });
       showBanner();
       return;
     }
+
 
     // Si accorge quando l'app viene DAVVERO installata (non solo cliccato "Installa")
     window.addEventListener('appinstalled', () => track('app_installata'));
