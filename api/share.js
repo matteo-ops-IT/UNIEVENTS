@@ -67,7 +67,10 @@ module.exports = async (req, res) => {
   }
   if (!desc) desc = "Quello che succede all'Unical, prima che finisca.";
 
-  const image = ev && ev.image_url && /^https?:\/\//i.test(ev.image_url) ? ev.image_url : FALLBACK_IMAGE;
+  const rawImage = ev && ev.image_url && /^https?:\/\//i.test(ev.image_url) ? ev.image_url : null;
+const image = rawImage
+  ? "https://images.weserv.nl/?url=" + encodeURIComponent(rawImage) + "&w=1200&h=630&fit=contain&cbg=F7F5F1&output=jpg&q=80"
+  : FALLBACK_IMAGE;
 
   const html = `<!DOCTYPE html>
 <html lang="it">
