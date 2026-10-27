@@ -4,7 +4,7 @@
 
 const SUPABASE_URL = "https://ttnwhqpvwkihszxpbdbe.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_W4TDBUcZsTSKPe6fdt0HhQ_6t8KyjXO";
-const SITE = "https://unievents.it";
+const SITE = "https://www.unievents.it";
 const FALLBACK_IMAGE = SITE + "/social-preview.png";
 
 function esc(s) {
