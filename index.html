@@ -1439,8 +1439,8 @@
     const text = `📅 ${e.title}\n📍 ${e.place}\n🗓️ ${formatDatePlain(e)}\n\nScopri di più su Uni Events:`;
     // Link al nostro sito con l'id dell'evento: aprendolo, l'app va
     // automaticamente alla sezione giusta e mette in evidenza la card
-    const url = `${window.location.origin}${window.location.pathname}?event=${encodeURIComponent(e.id)}`;
-
+    const url = `${window.location.origin}/e/${encodeURIComponent(e.id)}`;
+    
     if (navigator.share) {
       try {
         await navigator.share({ title: e.title, text, url });
