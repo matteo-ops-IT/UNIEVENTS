@@ -2722,5 +2722,63 @@
 </script>
 <!-- ==== fine blocco nuovo stile ==== -->
 
+<style>
+  :root{
+    --burg-1:#2E0711;
+    --burg-2:#5A1220;
+    --burg-3:#7A1B2D;
+  }
+  body{
+    background:
+      radial-gradient(1100px 560px at 50% -8%, var(--burg-3) 0%, transparent 62%),
+      linear-gradient(180deg, var(--burg-2) 0%, var(--burg-1) 100%);
+    background-attachment:fixed;
+    min-height:100vh;
+  }
+
+  /* testi fuori dalle card → chiari */
+  .tagline{ color:rgba(255,255,255,.72); }
+  .tabs{ border-bottom-color:rgba(255,255,255,.18); }
+  .tab{ color:rgba(255,255,255,.6); }
+  .tab.active{ color:#fff; border-bottom-color:#fff; }
+  .notif-btn, .past-btn{ color:#fff; border-color:rgba(255,255,255,.3); }
+  .past-btn:hover{ border-color:#fff; color:#fff; }
+  .past-btn.active-past{ background:#fff; color:var(--burg-1); border-color:#fff; }
+  .notif-btn.active{ background:#fff; color:var(--burg-1); border-color:#fff; }
+  .day-separator{ color:#fff; }
+  .month-separator{ color:#FFB3B8; border-top-color:rgba(255,255,255,.18); }
+  .search-count{ color:rgba(255,255,255,.7); }
+  .search-chip{ color:#fff; border-color:rgba(255,255,255,.3); }
+  .search-chip:hover{ border-color:#fff; }
+  .search-chip.active{ background:#fff; color:var(--burg-1); border-color:#fff; }
+  .empty{ color:rgba(255,255,255,.75); border-color:rgba(255,255,255,.25); }
+  .empty button{ color:#FFB3B8; }
+  .cta{ background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.12); }
+  footer{ color:rgba(255,255,255,.6); border-top-color:rgba(255,255,255,.18); }
+
+  /* card che fluttuano verso lo schermo */
+  .card{
+    border-color:transparent;
+    box-shadow:
+      0 2px 4px rgba(0,0,0,.20),
+      0 10px 20px rgba(0,0,0,.28),
+      0 26px 50px rgba(0,0,0,.38),
+      -12px 0 26px -14px rgba(0,0,0,.50),
+      12px 0 26px -14px rgba(0,0,0,.50);
+  }
+  /* "il prossimo": rosso più vivo, leggibile sul burgundy */
+  .card.next{
+    border-color:#FF5A5F;
+    box-shadow:
+      0 0 0 1px #FF5A5F,
+      0 0 22px rgba(255,90,95,.35),
+      0 26px 50px rgba(0,0,0,.40);
+  }
+  /* sul desktop la card si solleva leggermente al passaggio del mouse */
+  @media (hover:hover){
+    .card:hover{ transform:translateY(-4px) !important; }
+  }
+</style>
+<meta name="theme-color" content="#2E0711">
 </body>
 </html>
